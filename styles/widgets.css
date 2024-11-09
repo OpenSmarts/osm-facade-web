@@ -1,8 +1,189 @@
 .widget {
-    background-color: #ddd;
+    display:inline-block;
+
+    background-color: var(--top-color);
+    box-shadow: 1px 1px var(--side-color), 3px 3px var(--side-color), 5px 5px var(--side-color);
+
+    padding:20px;
+    margin: 10px 15px 15px 10px;
     border-radius: 10px;
+    box-sizing: border-box;
+
+    transition-duration: 0.15s;
+
+    overflow: hidden;
+
+    --base-unit: 50px;
+
+    min-width: var(--base-unit);
+    min-height: var(--base-unit);
+
+    cursor:pointer;
 }
 
-.toggle {
-    background-color: gray;
+.widget:hover {
+    background-color: var(--top-color-hover);
 }
+
+.widget:active {
+    background-color: var(--top-color-active);
+}
+
+/**
+    Button widget that a lot of other widgets build from
+*/
+
+.button {
+    align-content: center;
+    text-align: center;
+
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.button:active {
+    transform:translate(5px, 5px);
+    box-shadow: none;
+    border:none;
+}
+
+/**
+    Toggle widget for things like power buttons
+*/
+
+.toggle {
+    width: calc(3 * var(--base-unit));
+    height: calc(3 * var(--base-unit));
+    --top-color: #888;
+    --top-color-hover: #aaa;
+    --top-color-active: #aaa;
+    --side-color: #444;
+    color: #222;
+    font-weight: bold;
+}
+
+.toggle.active {
+    --top-color: #dd3;
+    --top-color-hover: #ee7;
+    --top-color-active: #ee7;
+    color: rgb(255, 128, 0);
+    --side-color: rgb(255, 128, 0);
+}
+
+/**
+    Slider widget (add h class for horizontal)
+*/
+
+.slider {
+    --top-color: #888;
+    --top-color-hover: #aaa;
+    --top-color-active: #ccc;
+    --side-color: #444;
+    width: var(--base-unit);
+    height: calc(3 * var(--base-unit));
+    position: relative;
+}
+
+.slider.h {
+    height: var(--base-unit);
+    width: calc(3 * var(--base-unit));
+}
+
+.slider::before {
+    border-radius: 10px;
+    position:absolute;
+    bottom: 0;
+    left: 0;
+    height: calc(100% * var(--fill-percent));
+    width: 100%;
+    background-color: #0084ff;
+
+    transition-duration: 0.15s;
+
+    content: '';
+}
+
+.slider.h::before {
+    width: calc(100% * var(--fill-percent));
+    height: 100%;
+}
+
+.slider:hover::before {
+    background-color: #2696ff;
+}
+
+.slider:active::before {
+    background-color: #3ea2ff;
+}
+
+.slider::after {
+    position:absolute;
+    top: 10px;
+    left: calc(50% - 2px);
+    height: calc(100% - 20px);
+    width: 0;
+    border-right: 4px dotted rgba(255, 255, 255, 0.7);
+
+    content: '';
+}
+
+.slider.h::after {
+    top: calc(50% - 2px);
+    left: 10px;
+    width: calc(100% - 20px);
+    height: 0;
+
+    border-right: none;
+    border-top: 4px dotted rgba(255, 255, 255, 0.7);
+}
+
+/**
+    Checkbox widget
+*/
+
+.checkbox {
+    --top-color: #888;
+    --top-color-hover: #aaa;
+    --top-color-active: #aaa;
+    --side-color: #444;
+    position: relative;
+}
+
+.checkbox::after
+{
+	height: 24px;
+	width: 13px;
+
+	box-sizing: border-box;
+
+	position: absolute;
+
+	display: block;
+
+	border-color: white;
+	border-style: solid;
+	border-width: 0px 0px 0px 0px;
+
+	top: calc(50% - 13px);
+	left: calc(50% - 6px);
+
+	transform-origin: center;
+	transform: rotate(45deg);
+
+	content: '';
+}
+
+.checkbox.active {
+    --top-color: green;
+    --top-color-hover: lightgreen;
+    --top-color-active: lightgreen;
+}
+
+.checkbox.active::after
+{
+	border-width: 0px 5px 5px 0px;
+}
+
+/**
+    Color widget
+*/

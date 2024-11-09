@@ -5,19 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenSmarts</title>
     <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/widgets.css" />
 </head>
 <body>
     <user>
-        <img id="profile" src="assets/profile.png" />
+        <a href="?page=user">
+            <img id="profile" src="assets/profile.png" />
+        </a>
     </user>
 
     <nav>
-        <a class="nav-el" href="#">Dashboard</a>
-        <a class="nav-el" href="#">Manage Devices</a>
-        <a class="nav-el" href="#">Alerts</a>
-        <a class="nav-el" href="#">Settings</a>
-        <a class="nav-el" href="#">Home Automation</a>
+        <a class="nav-el" href="?page=dashboard">Dashboard</a>
+        <a class="nav-el" href="?page=manage">Manage Devices</a>
+        <a class="nav-el" href="?page=alerts">Alerts</a>
+        <a class="nav-el" href="?page=settings">Settings</a>
+        <a class="nav-el" href="?page=automation">Home Automation</a>
     </nav>
+
+    <content>
+        <span class="widget button" style="--top-color: blue; --side-color:red;">Lamp 1</span>
+        <div class="widget button toggle">Lamp 1</div>
+        <div class="widget slider" style="--fill-percent: 0.3;"></div>
+        <div class="widget button checkbox"></div>
+    </content>
 
     <script src="scripts/main.js"></script>
 </body>
