@@ -43,7 +43,7 @@
 
 .button:active {
     transform:translate(5px, 5px);
-    box-shadow: none;
+    box-shadow: none !important;
     border:none;
 }
 
@@ -142,11 +142,23 @@
 */
 
 .checkbox {
-    --top-color: #888;
-    --top-color-hover: #aaa;
-    --top-color-active: #aaa;
+    --top-color: rgba(0, 0, 0, 0);
+    --top-color-hover: rgba(0, 0, 0, 0);
+    --top-color-active: rgba(0, 0, 0, 0);
     --side-color: #444;
     position: relative;
+
+    border: 7px solid #888;
+    box-shadow: 5px 5px inset var(--side-color), 1px 1px var(--side-color), 3px 3px var(--side-color), 5px 5px var(--side-color);
+    padding: 0;
+}
+
+.checkbox:hover {
+    border-color: #aaa;
+}
+
+.checkbox:active {
+    border: 10px solid #aaa;
 }
 
 .checkbox::after
@@ -177,8 +189,9 @@
     --top-color: green;
     --top-color-hover: lightgreen;
     --top-color-active: lightgreen;
+    border: none;
+    box-shadow: 1px 1px var(--side-color), 3px 3px var(--side-color), 5px 5px var(--side-color);
 }
-
 .checkbox.active::after
 {
 	border-width: 0px 5px 5px 0px;
