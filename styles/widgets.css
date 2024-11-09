@@ -158,7 +158,7 @@
 }
 
 .checkbox:active {
-    border: 10px solid #aaa;
+    border: 7px solid #aaa;
 }
 
 .checkbox::after
