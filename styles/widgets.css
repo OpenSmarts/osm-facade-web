@@ -230,7 +230,7 @@
 .color-temp {
     width: var(--base-unit);
     height: calc(3 * var(--base-unit));
-	background: linear-gradient(rgb(190, 200, 255), white 30%, rgb(255, 190, 150));
+	background: linear-gradient(rgb(190, 200, 255), white 30%, rgb(250, 160, 100));
     --side-color: #aaa;
 	overflow: unset;
 }
