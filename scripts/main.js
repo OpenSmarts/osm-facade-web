@@ -1,3 +1,3 @@
-import { widget } from './gui-common/widgets.js';
+import * as w from './gui-common/widgets.js';
 
-widget();
+let a = w.Widget();

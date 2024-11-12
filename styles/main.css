@@ -1,3 +1,11 @@
+* {
+    font-family: "Host Grotesk", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 18px;
+}
+
 html, body {
     font-family: sans-serif;
     box-sizing: border-box;
@@ -6,7 +14,8 @@ html, body {
 body {
     min-height: 100vh;
     margin:0;
-    background-color: #eee;
+    background-color: var(--bg);
+    color: var(--color);
 }
 
 user {
@@ -44,9 +53,8 @@ nav {
 
 nav .nav-el {
     margin:10px;
-    font-weight: bold;
     text-decoration: none;
-    color: #ddd;
+    color: #eee;
     transition-duration: 0.2s;
 }
 

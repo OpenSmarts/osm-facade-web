@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenSmarts</title>
+
+    <!-- Widgets and Main styles -->
     <link rel="stylesheet" href="styles/main.css" />
     <link rel="stylesheet" href="styles/widgets.css" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+    <!-- Theme -->
+    <link id="theme" rel="stylesheet" href="styles/themes/base.css" />
 </head>
 <body>
     <user>
@@ -30,6 +40,11 @@
         <div class="widget color-wheel" style="--pos-x: 0.3; --pos-y: 0.3;"></div>
         <div class="widget color-temp" style="--pos: 0.3;"></div>
         <div class="widget color-light" style="--pos: 0.3;"></div>
+        <div class="widget thermostat" style="--percent: 0.3; --arch-color: #0084ff;">
+            <div class="arch"></div>
+            <div class="gague">68</div>
+            <div class="temp">72°</div>
+        </div>
     </content>
 
     <script type="module" src="scripts/main.js"></script>

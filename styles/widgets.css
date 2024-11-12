@@ -1,8 +1,8 @@
 .widget {
     display:inline-block;
 
-    background-color: var(--top-color);
-    box-shadow: 1px 1px var(--side-color), 3px 3px var(--side-color), 5px 5px var(--side-color);
+    background-color: var(--w-bg);
+    box-shadow: 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
 
     padding:20px;
     margin: 10px 15px 15px 10px;
@@ -13,21 +13,21 @@
 
     overflow: hidden;
 
-    --base-unit: 50px;
+    --base-unit: 36px;
 
     min-width: var(--base-unit);
     min-height: var(--base-unit);
 
     cursor:pointer;
-	position: relative;
+    position: relative;
 }
 
 .widget:hover {
-    background-color: var(--top-color-hover);
+    background-color: var(--w-bg-hover);
 }
 
 .widget:active {
-    background-color: var(--top-color-active);
+    background-color: var(--w-bg-active);
 }
 
 /**
@@ -55,20 +55,18 @@
 .toggle {
     width: calc(3 * var(--base-unit));
     height: calc(3 * var(--base-unit));
-    --top-color: #888;
-    --top-color-hover: #aaa;
-    --top-color-active: #aaa;
-    --side-color: #444;
-    color: #222;
+    --w-bg: var(--w-tg-inactive-bg);
+    --w-bg-hover: var(--w-tg-inactive-bg-hover);
+    --w-bg-active: var(--w-tg-inactive-bg-active);
+    color: var(--w-tg-inactive-color);
     font-weight: bold;
 }
 
 .toggle.active {
-    --top-color: #dd3;
-    --top-color-hover: #ee7;
-    --top-color-active: #ee7;
-    color: rgb(255, 128, 0);
-    --side-color: rgb(255, 128, 0);
+    --w-bg: var(--w-tg-active-bg);
+    --w-bg-hover: var(--w-tg-active-bg-hover);
+    --w-bg-active: var(--w-tg-active-bg-active);
+    color: var(--w-tg-active-color);
 }
 
 /**
@@ -76,10 +74,6 @@
 */
 
 .slider {
-    --top-color: #888;
-    --top-color-hover: #aaa;
-    --top-color-active: #ccc;
-    --side-color: #444;
     width: var(--base-unit);
     height: calc(3 * var(--base-unit));
 }
@@ -96,7 +90,7 @@
     left: 0;
     height: calc(100% * var(--fill-percent));
     width: 100%;
-    background-color: #0084ff;
+    background-color: var(--w-sl-fill);
 
     transition-duration: 0.15s;
 
@@ -109,32 +103,48 @@
 }
 
 .slider:hover::before {
-    background-color: #2696ff;
+    background-color: var(--w-sl-fill-hover);
 }
 
 .slider:active::before {
-    background-color: #3ea2ff;
+    background-color: var(--w-sl-fill-active);
 }
 
 .slider::after {
     position: absolute;
-    top: 10px;
-    left: calc(50% - 2px);
-    height: calc(100% - 20px);
+    top: 6px;
+    left: calc(50% - var(--w-sl-dots-size) / 2);
+    height: calc(100% - var(--w-sl-dots-size) * 2);
     width: 0;
-    border-right: 4px dotted rgba(255, 255, 255, 0.7);
+    border-right: var(--w-sl-dots);
 
     content: '';
 }
 
 .slider.h::after {
-    top: calc(50% - 2px);
-    left: 10px;
-    width: calc(100% - 20px);
+    top: calc(50% - var(--w-sl-dots-size) / 2);
+    left: 6px;
+    width: calc(100% - var(--w-sl-dots-size) * 2);
     height: 0;
 
     border-right: none;
-    border-top: 4px dotted rgba(255, 255, 255, 0.7);
+    border-bottom: var(--w-sl-dots);
+}
+
+.slider > .detail {
+    display: none;
+    position: absolute;
+    left: calc(100% + 5px);
+    background-color: #0084ff;
+    color: white;
+    font-weight: bold;
+    width: var(--base-unit);
+    height: var(--base-unit);
+    clip-path: path("");
+}
+
+.slider:active > .detail {
+    
 }
 
 /**
@@ -142,58 +152,59 @@
 */
 
 .checkbox {
-    --top-color: rgba(0, 0, 0, 0);
-    --top-color-hover: rgba(0, 0, 0, 0);
-    --top-color-active: rgba(0, 0, 0, 0);
-    --side-color: #444;
+    --w-bg: rgba(0, 0, 0, 0);
+    --w-bg-hover: rgba(0, 0, 0, 0);
+    --w-bg-active: rgba(0, 0, 0, 0);
 
-    border: 7px solid #888;
-    box-shadow: 5px 5px inset var(--side-color), 1px 1px var(--side-color), 3px 3px var(--side-color), 5px 5px var(--side-color);
+    border: 7px solid var(--w-cb-inactive-outline);
+    box-shadow: 5px 5px inset var(--w-shadow), 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
     padding: 0;
 }
 
 .checkbox:hover {
-    border-color: #aaa;
+    border-color: var(--w-cb-inactive-outline-hover);
 }
 
 .checkbox:active {
-    border: 7px solid #aaa;
+    border: 7px solid var(--w-cb-inactive-outline-active);
 }
 
 .checkbox::after
 {
-	height: 24px;
-	width: 13px;
+    height: 24px;
+    width: 13px;
 
-	box-sizing: border-box;
+    box-sizing: border-box;
 
-	position: absolute;
+    position: absolute;
 
-	display: block;
+    display: block;
 
-	border-color: white;
-	border-style: solid;
-	border-width: 0px 0px 0px 0px;
+    border-color: white;
+    border-style: solid;
+    border-width: 0px 0px 0px 0px;
 
-	top: calc(50% - 13px);
-	left: calc(50% - 6px);
+    top: calc(50% - 13px);
+    left: calc(50% - 6px);
 
-	transform-origin: center;
-	transform: rotate(45deg);
+    transform-origin: center;
+    transform: rotate(45deg);
 
-	content: '';
+    transition-duration: 0.15s;
+
+    content: '';
 }
 
 .checkbox.active {
-    --top-color: green;
-    --top-color-hover: lightgreen;
-    --top-color-active: lightgreen;
+    --w-bg: var(--w-cb-active-bg);
+    --w-bg-hover: var(--w-cb-active-bg-hover);
+    --w-bg-active: var(--w-cb-active-bg-active);
     border: none;
-    box-shadow: 1px 1px var(--side-color), 3px 3px var(--side-color), 5px 5px var(--side-color);
+    box-shadow: 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
 }
 .checkbox.active::after
 {
-	border-width: 0px 5px 5px 0px;
+    border-width: 0px 5px 5px 0px;
 }
 
 /**
@@ -201,82 +212,154 @@
 */
 
 .color-wheel {
-	background: radial-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
-	border-radius: 50%;
+    background: radial-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+    border-radius: 50%;
     width: calc(3 * var(--base-unit));
     height: calc(3 * var(--base-unit));
     --side-color: #aaa;
-	overflow: unset;
+    overflow: unset;
 }
 
 .color-wheel::after {
-	content: '';
-	height: 18px;
-	width: 18px;
-	border: 5px solid #444;
-	position: absolute;
-	bottom: calc((50% - 9px) + (50%) * var(--pos-y));
-	left: calc((50% - 9px) + (50%) * var(--pos-x));
+    content: '';
+    height: 18px;
+    width: 18px;
+    border: 5px solid #444;
+    position: absolute;
+    bottom: calc((50% - 9px) + (50%) * var(--pos-y));
+    left: calc((50% - 9px) + (50%) * var(--pos-x));
 
-	border-radius: 50%;
-	transition-duration: 0.15s;
-	box-sizing: border-box;
+    border-radius: 50%;
+    transition-duration: 0.15s;
+    box-sizing: border-box;
 }
 
 .color-wheel:hover::after {
-	border-color: #888;
+    border-color: #888;
 }
 
 .color-temp {
     width: var(--base-unit);
     height: calc(3 * var(--base-unit));
-	background: linear-gradient(rgb(190, 200, 255), white 30%, rgb(250, 160, 100));
+    background: linear-gradient(rgb(190, 200, 255), white 30%, rgb(250, 160, 100));
     --side-color: #aaa;
-	overflow: unset;
+    overflow: unset;
 }
 
 .color-temp::after {
-	content: '';
-	width: calc(100% + 8px);
-	height: 14px;
-	border: 5px solid #444;
-	position: absolute;
-	bottom: calc(-7px + (100% + 14px) * var(--pos));
-	left: -4px;
+    content: '';
+    width: calc(100% + 8px);
+    height: 14px;
+    border: 5px solid #444;
+    position: absolute;
+    bottom: calc(100% * var(--pos) - 7px);
+    left: -4px;
 
-	box-sizing: border-box;
+    box-sizing: border-box;
 
-	border-radius: 7px;
-	transition-duration: 0.15s;
+    border-radius: 7px;
+    transition-duration: 0.15s;
 }
 
 .color-temp:hover::after {
-	border-color: #888;
+    border-color: #888;
 }
 
 .color-light {
     height: var(--base-unit);
     width: calc(3 * var(--base-unit));
-	background: linear-gradient(to left, white, black);
+    background: linear-gradient(to left, white, black);
     --side-color: #aaa;
-	overflow: unset;
+    overflow: unset;
 }
 
 .color-light::after {
-	content: '';
-	height: calc(100% + 8px);
-	width: 14px;
-	border: 5px solid #444;
-	position: absolute;
-	left: calc(-7px + (100% + 14px) * var(--pos));
-	top: -4px;
+    content: '';
+    height: calc(100% + 8px);
+    width: 14px;
+    border: 5px solid #444;
+    position: absolute;
+    left: calc(100% * var(--pos) - 7px);
+    top: -4px;
 
-	box-sizing: border-box;
+    box-sizing: border-box;
 
-	border-radius: 7px;
-	transition-duration: 0.15s;
+    border-radius: 7px;
+    transition-duration: 0.15s;
 }
 
 .color-light:hover::after {
-	border-color: #888;
+    border-color: #888;
+}
+
+/**
+    Thermostat
+*/
+
+.thermostat {
+    align-content: center;
+    text-align: center;
+
+    width: calc(6 * var(--base-unit));
+    height: calc(3 * var(--base-unit));
+
+    overflow: unset;
+}
+
+.thermostat > .arch {
+    position: absolute;
+
+    height: 100px;
+    width: 200px;
+
+    top: calc(50% - 45px);
+    left: calc(50% - 100px);
+    
+    
+    clip-path: path("M 6.6525702323609295 64.13556976925895 A 100 100 0 0 1 193.34742976763908 64.13556976925895 A 5 5 0 0 1 184.01268679087516 67.72201279233306 A 90 90 0 0 0 15.987313209124835 67.72201279233306 A 5 5 0 0 1 6.6525702323609295 64.13556976925895 ");
+    background-color: #222;
+}
+
+.thermostat > .arch::after {
+    content: '';
+    display: block;
+    height: 100px;
+    width: 200px;
+    background-color: var(--arch-color);
+    transform-origin: bottom center;
+    transform: rotate(calc((1 - var(--percent)) * -144deg - 18deg));
+    transition-duration: 0.5s;
+}
+
+.thermostat > .gague {
+    position: absolute;
+    bottom: calc(-13px + ((100% - 100px) / 2) + 90px);
+    left: calc(-13px + 50%);
+    height: 26px;
+    width: 26px;
+    border-radius: 50%;
+    background-color: white;
+    transition-duration: 0.5s;
+
+    box-sizing: border-box;
+    border: 2px solid white;
+
+    box-shadow: inset 0px 0px 0px 2px var(--arch-color);
+
+    transform-origin: 13px 108px;
+    transform: rotate(calc(72deg - (1 - var(--percent)) * 144deg));
+
+    text-align: center;
+    align-content: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.thermostat > .temp {
+    position: absolute;
+    bottom: calc((100% - 100px) / 2);
+    left: calc(50% - 65px);
+    width: 130px;
+    font-size: 55px;
+    text-align: center;
 }

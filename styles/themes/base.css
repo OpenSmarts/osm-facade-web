@@ -1,0 +1,36 @@
+* {
+    --bg: seashell;
+    --color: #222;
+
+    /* Gobal colors */
+    --w-bg: #ccc;
+    --w-bg-hover: #eee;
+    --w-bg-active: #eee;
+    --w-shadow: #aaa;
+
+    /* Toggle Widget colors */
+    --w-tg-inactive-color: #222;
+    --w-tg-inactive-bg: #0084ff;
+    --w-tg-inactive-bg-hover: #3ea2ff;
+    --w-tg-inactive-bg-active: #3ea2ff;
+    --w-tg-active-color: rgb(255, 128, 0);
+    --w-tg-active-bg: #dd3;
+    --w-tg-active-bg-hover: #ee7;
+    --w-tg-active-bg-active: #ee7;
+
+    /* Slider colors */
+    --w-sl-fill: #0084ff;
+    --w-sl-fill-hover: #2696ff;
+    --w-sl-fill-active: #3ea2ff;
+    --w-sl-dots-size: 6px;
+    --w-sl-dots: var(--w-sl-dots-size) dotted rgba(255, 255, 255, 0.7);
+
+    /* Checkbox */
+    --w-cb-inactive-outline: #ccc;
+    --w-cb-inactive-outline-hover: #eee;
+    --w-cb-inactive-outline-active: #eee;
+    --w-cb-active-bg: #1d6;
+    --w-cb-active-bg-hover: #5f9;
+    --w-cb-active-bg-active: #5f9;
+    
+}
