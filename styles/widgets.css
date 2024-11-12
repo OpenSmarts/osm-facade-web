@@ -1,10 +1,16 @@
+input {
+    opacity: 0;
+    display: none;
+    content: "";
+}
+
 .widget {
     display:inline-block;
 
     background-color: var(--w-bg);
     box-shadow: 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
 
-    padding:20px;
+    padding: 5px;
     margin: 10px 15px 15px 10px;
     border-radius: 10px;
     box-sizing: border-box;
@@ -30,11 +36,11 @@
     background-color: var(--w-bg-active);
 }
 
-.widget.inactive {
+.widget.inactive, .widget:disabled {
     box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive);
 }
 
-.widget.inactive::before {
+.widget.inactive::before, .widget:disabled::before {
     content: '';
     display: block;
     position: absolute;
@@ -49,15 +55,15 @@
     z-index: 1;
 }
 
-.widget.inactive:hover::before {
+.widget.inactive:hover::before, .widget:disabled:hover::before {
     background-color: rgba(0, 0, 0, 0);
 }
 
-.widget.inactive:hover {
+.widget.inactive:hover, .widget:disabled:hover {
     background-color: var(--w-bg);
 }
 
-.widget.inactive:active {
+.widget.inactive:active, .widget:disabled:active {
     background-color: var(--w-bg);
 }
 
@@ -79,7 +85,7 @@
     border:none;
 }
 
-.button.inactive:active {
+.button.inactive:active, .button:disabled:active {
     transform: none;
     box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive) !important;
     border: inherit;
@@ -213,6 +219,9 @@
     --w-bg-hover: rgba(0, 0, 0, 0);
     --w-bg-active: rgba(0, 0, 0, 0);
 
+    width: var(--base-unit);
+    height: var(--base-unit);
+
     border: 7px solid var(--w-cb-inactive-outline);
     box-shadow: 5px 5px inset var(--w-shadow), 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
     padding: 0;
@@ -228,22 +237,22 @@
     border: 7px solid var(--w-cb-inactive-outline-active);
 }
 
-.checkbox.inactive {
+.checkbox.inactive, .checkbox:disabled {
     box-shadow: 5px 5px inset var(--w-shadow-inactive), 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive);
 }
 
-.checkbox.inactive::before {
+.checkbox.inactive::before, .checkbox:disabled::before {
     width: calc(100% + 14px);
     height: calc(100% + 14px);
     top: -7px;
     left: -7px;
 }
 
-.checkbox.inactive:hover {
+.checkbox.inactive:hover, .checkbox:disabled:hover {
     border-color: var(--w-cb-inactive-outline);
 }
 
-.checkbox.inactive:active {
+.checkbox.inactive:active, .checkbox:disabled:active {
     border: 7px solid var(--w-cb-inactive-outline);
     box-shadow: 5px 5px inset var(--w-shadow-inactive), 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive) !important;
 }
@@ -274,7 +283,7 @@
     content: '';
 }
 
-.checkbox.active {
+.checkbox:checked, .checkbox.active {
     --w-bg: var(--w-cb-active-bg);
     --w-bg-hover: var(--w-cb-active-bg-hover);
     --w-bg-active: var(--w-cb-active-bg-active);
@@ -282,21 +291,21 @@
     box-shadow: 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
 }
 
-.checkbox.active::after
+.checkbox:checked::after, .checkbox.active::after
 {
     border-width: 0px 5px 5px 0px;
 }
 
-.checkbox.active.inactive {
+.checkbox.inactive:checked, .checkbox.active.inactive, .checkbox:disabled:checked {
     box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive);
 }
 
-.checkbox.active.inactive:active {
+.checkbox.inactive:checked:active, .checkbox.active.inactive:active, .checkbox:disabled:checked:active {
     border: none;
     box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive) !important;
 }
 
-.checkbox.active.inactive::before {
+.checkbox.inactive:checked::before, .checkbox.active.inactive::before, .checkbox:disabled:checked::before {
     width: 100%;
     height: 100%;
     top: 0;
@@ -308,7 +317,7 @@
 */
 
 .color-wheel {
-    background: radial-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+    background: radial-gradient(white, transparent calc(1.5 * var(--base-unit))), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
     border-radius: 50%;
     width: calc(3 * var(--base-unit));
     height: calc(3 * var(--base-unit));
@@ -470,6 +479,57 @@
     bottom: calc((100% - 100px) / 2);
     left: calc(50% - 65px);
     width: 130px;
-    font-size: 55px;
+    font-size: 50px;
     text-align: center;
 }
+
+/*
+    Button Select
+*/
+
+.select {
+    display: inline-flex;
+    max-height: calc(2 *  var(--base-unit));
+    max-width: calc(8 *  var(--base-unit));
+    box-shadow: inset 5px 5px var(--w-shadow);
+    --w-bg-hover: var(--w-bg);
+    --w-bg-active: var(--w-bg);
+    overflow-x: auto;
+}
+
+.select.h {
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    max-width: calc(3 *  var(--base-unit));
+    max-height: calc(8 *  var(--base-unit));
+    overflow-x: hidden;
+}
+
+.select > div {
+    margin: 5px 5px;
+    padding: 7px;
+
+    --w-bg: var(--w-sel-button);
+    --w-bg-hover: var(--w-sel-button-hover);
+    --w-bg-active: var(--w-sel-button-active);
+
+    height: calc(100% - 12px);
+
+    box-sizing: border-box;
+
+    width: fit-content;
+}
+
+.select.h > div {
+    height: auto;
+    width: calc(100% - 12px);
+}
+
+
+.select > div[selected] {
+    --w-bg: var(--w-sel-button-selected);
+    --w-bg-hover: var(--w-sel-button-selected-hover);
+    --w-bg-active: var(--w-sel-button-selected-active);
+}
+

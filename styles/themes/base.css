@@ -34,4 +34,11 @@
     --w-cb-active-bg-hover: #5f9;
     --w-cb-active-bg-active: #5f9;
     
+    /* Button Select */
+    --w-sel-button: #eee;
+    --w-sel-button-hover: white;
+    --w-sel-button-active: white;
+    --w-sel-button-selected: #0084ff;
+    --w-sel-button-selected-hover: #3ea2ff;
+    --w-sel-button-selected-active: #3ea2ff;
 }
