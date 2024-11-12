@@ -76,6 +76,7 @@
 .slider {
     width: var(--base-unit);
     height: calc(3 * var(--base-unit));
+    overflow: unset;
 }
 
 .slider.h {
@@ -88,7 +89,7 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    height: calc(100% * var(--fill-percent));
+    height: calc(100% * var(--percent));
     width: 100%;
     background-color: var(--w-sl-fill);
 
@@ -132,19 +133,34 @@
 }
 
 .slider > .detail {
-    display: none;
+    display: block;
     position: absolute;
-    left: calc(100% + 5px);
-    background-color: #0084ff;
-    color: white;
+
+    left: calc(100% + 20px);
+    bottom: calc(-1 * var(--base-unit) / 2 + 100% * var(--percent));
+
+    background-color: rgba(0, 132, 255, 0);
+    color: rgba(255, 255, 255, 0);
+
+    border-radius: 10px;
+
+    z-index: 1;
+
     font-weight: bold;
-    width: var(--base-unit);
+    min-width: var(--base-unit);
     height: var(--base-unit);
-    clip-path: path("");
+    transition-duration: 0.15s;
+    pointer-events: none;
+
+    align-content: center;
+    text-align: center;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
 .slider:active > .detail {
-    
+    background-color: rgba(0, 132, 255, 1);
+    color: rgba(255, 255, 255, 1);
 }
 
 /**
@@ -252,7 +268,7 @@
     height: 14px;
     border: 5px solid #444;
     position: absolute;
-    bottom: calc(100% * var(--pos) - 7px);
+    bottom: calc(100% * var(--percent) - 7px);
     left: -4px;
 
     box-sizing: border-box;
@@ -279,7 +295,7 @@
     width: 14px;
     border: 5px solid #444;
     position: absolute;
-    left: calc(100% * var(--pos) - 7px);
+    left: calc(100% * var(--percent) - 7px);
     top: -4px;
 
     box-sizing: border-box;
@@ -315,7 +331,7 @@
     top: calc(50% - 45px);
     left: calc(50% - 100px);
     
-    
+    /* Strange half-circle path */
     clip-path: path("M 6.6525702323609295 64.13556976925895 A 100 100 0 0 1 193.34742976763908 64.13556976925895 A 5 5 0 0 1 184.01268679087516 67.72201279233306 A 90 90 0 0 0 15.987313209124835 67.72201279233306 A 5 5 0 0 1 6.6525702323609295 64.13556976925895 ");
     background-color: #222;
 }
