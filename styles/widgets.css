@@ -30,6 +30,37 @@
     background-color: var(--w-bg-active);
 }
 
+.widget.inactive {
+    box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive);
+}
+
+.widget.inactive::before {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+    transition-duration: 0.15s;
+    top: 0;
+    left: 0;
+
+    z-index: 1;
+}
+
+.widget.inactive:hover::before {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.widget.inactive:hover {
+    background-color: var(--w-bg);
+}
+
+.widget.inactive:active {
+    background-color: var(--w-bg);
+}
+
 /**
     Button widget that a lot of other widgets build from
 */
@@ -46,6 +77,12 @@
     transform:translate(5px, 5px);
     box-shadow: none !important;
     border:none;
+}
+
+.button.inactive:active {
+    transform: none;
+    box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive) !important;
+    border: inherit;
 }
 
 /**
@@ -144,7 +181,7 @@
 
     border-radius: 10px;
 
-    z-index: 1;
+    z-index: 2;
 
     font-weight: bold;
     min-width: var(--base-unit);
@@ -163,6 +200,10 @@
     color: rgba(255, 255, 255, 1);
 }
 
+.slider.inactive > .detail {
+    display: none;
+}
+
 /**
     Checkbox widget
 */
@@ -175,6 +216,8 @@
     border: 7px solid var(--w-cb-inactive-outline);
     box-shadow: 5px 5px inset var(--w-shadow), 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
     padding: 0;
+
+    overflow: unset;
 }
 
 .checkbox:hover {
@@ -183,6 +226,26 @@
 
 .checkbox:active {
     border: 7px solid var(--w-cb-inactive-outline-active);
+}
+
+.checkbox.inactive {
+    box-shadow: 5px 5px inset var(--w-shadow-inactive), 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive);
+}
+
+.checkbox.inactive::before {
+    width: calc(100% + 14px);
+    height: calc(100% + 14px);
+    top: -7px;
+    left: -7px;
+}
+
+.checkbox.inactive:hover {
+    border-color: var(--w-cb-inactive-outline);
+}
+
+.checkbox.inactive:active {
+    border: 7px solid var(--w-cb-inactive-outline);
+    box-shadow: 5px 5px inset var(--w-shadow-inactive), 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive) !important;
 }
 
 .checkbox::after
@@ -218,9 +281,26 @@
     border: none;
     box-shadow: 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
 }
+
 .checkbox.active::after
 {
     border-width: 0px 5px 5px 0px;
+}
+
+.checkbox.active.inactive {
+    box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive);
+}
+
+.checkbox.active.inactive:active {
+    border: none;
+    box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive) !important;
+}
+
+.checkbox.active.inactive::before {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
 }
 
 /**
@@ -254,6 +334,14 @@
     border-color: #888;
 }
 
+.color-wheel.inactive::before {
+    border-radius: 50%;
+}
+
+.color-wheel.inactive::after {
+    border-color: rgb(68, 68, 68, 0);
+}
+
 .color-temp {
     width: var(--base-unit);
     height: calc(3 * var(--base-unit));
@@ -279,6 +367,10 @@
 
 .color-temp:hover::after {
     border-color: #888;
+}
+
+.color-temp.inactive::after {
+    border-color: rgb(68, 68, 68, 0);
 }
 
 .color-light {
@@ -308,6 +400,10 @@
     border-color: #888;
 }
 
+.color-light.inactive::after {
+    border-color: rgb(68, 68, 68, 0);
+}
+
 /**
     Thermostat
 */
@@ -318,8 +414,6 @@
 
     width: calc(6 * var(--base-unit));
     height: calc(3 * var(--base-unit));
-
-    overflow: unset;
 }
 
 .thermostat > .arch {

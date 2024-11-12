@@ -7,6 +7,7 @@
     --w-bg-hover: #eee;
     --w-bg-active: #eee;
     --w-shadow: #aaa;
+    --w-shadow-inactive: #888;
 
     /* Toggle Widget colors */
     --w-tg-inactive-color: #222;
