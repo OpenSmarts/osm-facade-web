@@ -584,16 +584,12 @@ class WidgetColorWheel extends WidgetDragable
         let rect = this.element.getBoundingClientRect();
         
         // Points
-        let tmpX = event.clientX;
-        let tmpY = rect.bottom - event.clientY + rect.top;
+        let tmpX = event.clientX - rect.width / 2;
+        let tmpY = rect.bottom - event.clientY + rect.top - rect.height / 2;
         
         // Percents
-        tmpX = (tmpX - rect.left) / (rect.right - rect.left);
-        tmpY = (tmpY - rect.top) / (rect.bottom - rect.top);
-        
-        // Vecs
-        tmpX = (Math.min(Math.max(0.0, tmpX), 1.0) - 0.5) * 2;
-        tmpY = (Math.min(Math.max(0.0, tmpY), 1.0) - 0.5) * 2;
+        tmpX = (tmpX - rect.left) / ((rect.right - rect.left) / 2);
+        tmpY = (tmpY - rect.top) / ((rect.bottom - rect.top) / 2);
 
         // Normalized
         let mag = Math.sqrt(tmpX * tmpX + tmpY * tmpY);
@@ -601,6 +597,7 @@ class WidgetColorWheel extends WidgetDragable
         {
             tmpX /= mag;
             tmpY /= mag;
+            mag = 1;
         }
 
         this.element.style.setProperty("--pos-x", tmpX);
