@@ -26,6 +26,8 @@ input {
 
     cursor:pointer;
     position: relative;
+
+    user-select: none;
 }
 
 .widget:hover {
@@ -127,7 +129,17 @@ input {
     width: calc(3 * var(--base-unit));
 }
 
-.slider::before {
+.slider > .fill {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.slider > .fill::before {
     border-radius: 10px;
     position: absolute;
     bottom: 0;
@@ -136,21 +148,19 @@ input {
     width: 100%;
     background-color: var(--w-sl-fill);
 
-    transition-duration: 0.15s;
-
     content: '';
 }
 
-.slider.h::before {
-    width: calc(100% * var(--fill-percent));
+.slider.h > .fill::before {
+    width: calc(100% * var(--percent));
     height: 100%;
 }
 
-.slider:hover::before {
+.slider:hover > .fill::before {
     background-color: var(--w-sl-fill-hover);
 }
 
-.slider:active::before {
+.slider:active > .fill::before {
     background-color: var(--w-sl-fill-active);
 }
 
@@ -175,7 +185,7 @@ input {
     border-bottom: var(--w-sl-dots);
 }
 
-.slider > .detail {
+.slider > .detail, .color-light > .detail, .color-temp > .detail {
     display: block;
     position: absolute;
 
@@ -190,15 +200,18 @@ input {
     z-index: 2;
 
     font-weight: bold;
-    min-width: var(--base-unit);
+    width: calc(1.2 * var(--base-unit));
     height: var(--base-unit);
-    transition-duration: 0.15s;
     pointer-events: none;
 
     align-content: center;
     text-align: center;
-    padding-left: 3px;
-    padding-right: 3px;
+    padding: 2px;
+}
+
+.slider.h > .detail, .color-light.h > .detail, .color-temp.h > .detail {
+    top: calc(100% + 20px);
+    left: calc(-1.2 * var(--base-unit) / 2 + 100% * var(--percent));
 }
 
 .slider:active > .detail {
@@ -206,7 +219,11 @@ input {
     color: rgba(255, 255, 255, 1);
 }
 
-.slider.inactive > .detail {
+.color-light:active > .detail, .color-temp:active > .detail {
+    background-color: var(--detail);
+}
+
+.inactive > .detail {
     display: none;
 }
 
@@ -359,7 +376,15 @@ input {
     overflow: unset;
 }
 
-.color-temp::after {
+.color-light {
+    width: var(--base-unit);
+    height: calc(3 * var(--base-unit));
+    background: linear-gradient(white, black);
+    --side-color: #aaa;
+    overflow: unset;
+}
+
+.color-temp::after, .color-light::after {
     content: '';
     width: calc(100% + 8px);
     height: 14px;
@@ -371,47 +396,16 @@ input {
     box-sizing: border-box;
 
     border-radius: 7px;
-    transition-duration: 0.15s;
 }
 
-.color-temp:hover::after {
+.color-temp:hover::after, .color-light:hover::after {
     border-color: #888;
 }
 
-.color-temp.inactive::after {
+.color-temp.inactive::after, .color-light.inactive::after {
     border-color: rgb(68, 68, 68, 0);
 }
 
-.color-light {
-    height: var(--base-unit);
-    width: calc(3 * var(--base-unit));
-    background: linear-gradient(to left, white, black);
-    --side-color: #aaa;
-    overflow: unset;
-}
-
-.color-light::after {
-    content: '';
-    height: calc(100% + 8px);
-    width: 14px;
-    border: 5px solid #444;
-    position: absolute;
-    left: calc(100% * var(--percent) - 7px);
-    top: -4px;
-
-    box-sizing: border-box;
-
-    border-radius: 7px;
-    transition-duration: 0.15s;
-}
-
-.color-light:hover::after {
-    border-color: #888;
-}
-
-.color-light.inactive::after {
-    border-color: rgb(68, 68, 68, 0);
-}
 
 /**
     Thermostat
@@ -425,7 +419,8 @@ input {
     height: calc(3 * var(--base-unit));
 }
 
-.thermostat > .arch {
+.thermostat > arch {
+    display: block;
     position: absolute;
 
     height: 100px;
@@ -439,7 +434,7 @@ input {
     background-color: #222;
 }
 
-.thermostat > .arch::after {
+.thermostat > arch::after {
     content: '';
     display: block;
     height: 100px;
@@ -450,7 +445,8 @@ input {
     transition-duration: 0.5s;
 }
 
-.thermostat > .gague {
+.thermostat > gague {
+    display: block;
     position: absolute;
     bottom: calc(-13px + ((100% - 100px) / 2) + 90px);
     left: calc(-13px + 50%);
@@ -474,7 +470,8 @@ input {
     font-weight: bold;
 }
 
-.thermostat > .temp {
+.thermostat > temp {
+    display: block;
     position: absolute;
     bottom: calc((100% - 100px) / 2);
     left: calc(50% - 65px);
@@ -487,7 +484,7 @@ input {
     Button Select
 */
 
-.select {
+.sel-button {
     display: inline-flex;
     max-height: calc(2 *  var(--base-unit));
     max-width: calc(8 *  var(--base-unit));
@@ -497,7 +494,7 @@ input {
     overflow-x: auto;
 }
 
-.select.h {
+.sel-button.h {
     flex-direction: column;
     height: 100%;
     overflow-y: auto;
@@ -506,7 +503,7 @@ input {
     overflow-x: hidden;
 }
 
-.select > div {
+.sel-button > div {
     margin: 5px 5px;
     padding: 7px;
 
@@ -521,13 +518,13 @@ input {
     width: fit-content;
 }
 
-.select.h > div {
+.sel-button.h > div {
     height: auto;
     width: calc(100% - 12px);
 }
 
 
-.select > div[selected] {
+.sel-button > div[selected] {
     --w-bg: var(--w-sel-button-selected);
     --w-bg-hover: var(--w-sel-button-selected-hover);
     --w-bg-active: var(--w-sel-button-selected-active);

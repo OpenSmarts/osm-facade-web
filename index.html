@@ -40,17 +40,19 @@
         <div class="widget color-temp" style="--percent: 0.3;"></div>
         <div class="widget color-light" style="--percent: 0.3;"></div>
         <div class="widget thermostat" style="--percent: 0.3; --arch-color: #0084ff;">
-            <div class="arch"></div>
-            <div class="gague">68</div>
-            <div class="temp">72°</div>
+            <arch></arch>
+            <gague>68</gague>
+            <temp>72°</temp>
         </div>
-        <div class="widget select h">
+        <div class="widget sel-button h">
             <div class="widget button">Heat</div>
             <div class="widget button">Cool</div>
             <div class="widget button" selected>Eco</div>
         </div>
     </content>
 
-    <script type="module" src="scripts/main.js"></script>
+    <script src="scripts/gui-common/color.js"></script>
+    <script src="scripts/gui-common/widgets.js"></script>
+    <script src="scripts/main.js"></script>
 </body>
 </html>
