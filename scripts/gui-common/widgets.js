@@ -567,6 +567,8 @@ class WidgetColorWheel extends WidgetDragable
         this.#detail = document.createElement("div");
         this.#detail.classList.add("detail");
         this.element.appendChild(this.#detail);
+
+        this.addEventListener("change", this.#change);
     }
 
     /** 
@@ -605,6 +607,12 @@ class WidgetColorWheel extends WidgetDragable
         this.update_detail(tmpX, tmpY, mag);
     }
 
+    #change ()
+    {
+        this.#tmpColor = this.get();
+        
+    }
+
     update_detail(x, y, mag)
     {
         if (x == 0)
@@ -620,6 +628,161 @@ class WidgetColorWheel extends WidgetDragable
             this.#tmpColor = Color.from_hsv(Math.atan(y / x), mag, 1);
 
         this.element.style.setProperty("--detail", this.#tmpColor.rgb());
+    }
+}
+
+/**
+ * @typedef {object} ThermSpec
+ * @property {number} temp
+ * @property {number} gague
+ */
+
+class WidgetThermostat extends Widget
+{
+    /** @type {HTMLElement} */
+    #gague = null;
+
+    /** @type {HTMLElement} */
+    #temp = null;
+
+    /** @type {number} */
+    #deviation = null;
+
+    /** @type {Color} */
+    #cold_color = null;
+
+    /** @type {Color} */
+    #temperate_color = null;
+
+    /** @type {Color} */
+    #hot_color = null;
+
+    /** @type {number} */
+    #cold_temp = null;
+
+    /** @type {number} */
+    #temp_hot = null;
+
+    /**
+     * Constructor
+     * @param {ThermSpec} therm Initial thermal information
+     * @param {number} [dev] The deviation of the arch (how far in degrees (temperature) from the middle to each end of the arc)
+     * @param {Color} [cold] The color the arch will display when in "cold" temperatures
+     * @param {Color} [temp] The color the arch will display when in "temperate" temperatures
+     * @param {Color} [hot] The color the arch will display when in "hot" temperatures
+     * @param {number} [ct] The point at which we swap from cold to temperate
+     * @param {number} [th] The point at which we swap from temperate to hot
+     */
+    constructor(
+        therm,
+        dev = 7,
+        cold = Color.from_rgb(0, 133, 255),
+        temp = Color.from_rgb(18, 229, 82),
+        hot = Color.from_rgb(255, 149, 0),
+        ct = -2,
+        th = 2
+    ) {
+        super();
+
+        this.element.classList.add("thermostat");
+        this.element.appendChild(document.createElement("arch"));
+
+        this.#temp = document.createElement("temp");
+        this.element.appendChild(this.#temp);
+
+        this.#gague = document.createElement("gague");
+        this.element.appendChild(this.#gague);
+
+        this.addEventListener("change", this.#update_ui);
+
+        this.#deviation = dev;
+        this.#cold_color = cold;
+        this.#temperate_color = temp;
+        this.#hot_color = hot;
+        this.#cold_temp = ct;
+        this.#temp_hot = th;
+        this.set(therm);
+    }
+
+    #update_ui()
+    {
+        /** @type {ThermSpec} */
+        let therm = this.get();
+        this.#gague.innerText = `${Math.fround(therm.gague)}`;
+        this.#temp.innerText = `${Math.fround(therm.temp)}°`;
+
+        // Generate a percentage relative to the deviation
+        let div = (therm.gague - therm.temp) / this.#deviation;
+        // Normalize into range of 0 - 1
+        div = div / 2 + 0.5;
+        div = Math.min(1, Math.max(div, 0));
+        
+        this.element.style.setProperty("--percent", div);
+
+        let color = this.#cold_color;
+        let r = therm.gague - therm.temp;
+        if (r >= this.#temp_hot)
+            color = this.#hot_color
+        else if (r >= this.#cold_temp)
+            color = this.#temperate_color;
+        this.element.style.setProperty("--detail", color.rgb());
+    }
+
+    /**
+     * Set the number shown underneath the thermostat's arch
+     * @param {number} t 
+     */
+    setTemp(t)
+    {
+        let therm = this.get();
+        therm.temp = t;
+        this.set(therm);
+    }
+
+    /**
+     * Set the number shown underneath the thermostat's arch
+     * @param {number} t 
+     */
+    setGague(g)
+    {
+        let therm = this.get();
+        therm.gague = g;
+        this.set(therm);
+    }
+
+    /**
+     * Set both the number underneath the thermostat and
+     * the number in the gague over it.
+     * @param {number} t 
+     * @param {number} g 
+     */
+    setTherm(t, g)
+    {
+        this.set({temp: t, gague: g});
+    }
+
+    /**
+     * Colors which will display within the designated zones
+     * @param {Color} cold 
+     * @param {Color} temperate 
+     * @param {Color} hot 
+     */
+    setColors(cold, temperate, hot)
+    {
+        this.#cold_color = cold;
+        this.#temperate_color = temperate;
+        this.#hot_color = hot;
+    }
+
+    /**
+     * Set the relative temperatures (in whatever degree units are being used)
+     * for when the color transitions happen on the arch
+     * @param {number} ct
+     * @param {number} th
+     */
+    setZoneStops(ct, th)
+    {
+
     }
 }
 

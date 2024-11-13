@@ -468,7 +468,7 @@ input {
     display: block;
     height: 100px;
     width: 200px;
-    background-color: var(--arch-color);
+    background-color: var(--detail);
     transform-origin: bottom center;
     transform: rotate(calc((1 - var(--percent)) * -144deg - 18deg));
     transition-duration: 0.5s;
@@ -488,7 +488,7 @@ input {
     box-sizing: border-box;
     border: 2px solid white;
 
-    box-shadow: inset 0px 0px 0px 2px var(--arch-color);
+    box-shadow: inset 0px 0px 0px 2px var(--detail);
 
     transform-origin: 13px 108px;
     transform: rotate(calc(72deg - (1 - var(--percent)) * 144deg));

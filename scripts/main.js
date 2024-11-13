@@ -18,6 +18,8 @@ class Client {
         content.appendChild(this.light.element);
         this.wheel = new WidgetColorWheel();
         content.appendChild(this.wheel.element);
+        this.therm = new WidgetThermostat({temp: 72, gague: 69});
+        content.appendChild(this.therm.element);
         // content.appendChild(Widget("button").el);
         // content.appendChild(Widget("checkbox").el);
         // content.appendChild(Widget("slider").el);

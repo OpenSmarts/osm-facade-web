@@ -91,6 +91,16 @@ class Color
         
         return L.interpolate(out, s);
     }
+
+    hsv_angle()
+    {
+        // TODO
+    }
+
+    hsv_mag()
+    {
+        // TODO
+    }
 }
 
 const RED = new Color(1, 0, 0, 1);
