@@ -16,6 +16,8 @@ class Client {
         content.appendChild(this.temp.element);
         this.light = new WidgetColorLight();
         content.appendChild(this.light.element);
+        this.wheel = new WidgetColorWheel();
+        content.appendChild(this.wheel.element);
         // content.appendChild(Widget("button").el);
         // content.appendChild(Widget("checkbox").el);
         // content.appendChild(Widget("slider").el);

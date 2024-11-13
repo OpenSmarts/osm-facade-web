@@ -147,7 +147,7 @@ input {
     height: calc(100% * var(--percent));
     width: 100%;
     background-color: var(--w-sl-fill);
-
+    transition-duration: 0.15s;
     content: '';
 }
 
@@ -162,6 +162,7 @@ input {
 
 .slider:active > .fill::before {
     background-color: var(--w-sl-fill-active);
+    transition-duration: 0s;
 }
 
 .slider::after {
@@ -185,7 +186,7 @@ input {
     border-bottom: var(--w-sl-dots);
 }
 
-.slider > .detail, .color-light > .detail, .color-temp > .detail {
+.slider > .detail, .color-light > .detail, .color-temp > .detail, .color-wheel > .detail {
     display: block;
     position: absolute;
 
@@ -203,10 +204,13 @@ input {
     width: calc(1.2 * var(--base-unit));
     height: var(--base-unit);
     pointer-events: none;
+    user-select: none;
 
     align-content: center;
     text-align: center;
     padding: 2px;
+
+    transition-duration: 0.15s;
 }
 
 .slider.h > .detail, .color-light.h > .detail, .color-temp.h > .detail {
@@ -217,10 +221,12 @@ input {
 .slider:active > .detail {
     background-color: rgba(0, 132, 255, 1);
     color: rgba(255, 255, 255, 1);
+    transition-duration: 0s;
 }
 
-.color-light:active > .detail, .color-temp:active > .detail {
+.color-light:active > .detail, .color-temp:active > .detail, .color-wheel:active > .detail {
     background-color: var(--detail);
+    transition-duration: 0s;
 }
 
 .inactive > .detail {
@@ -334,7 +340,7 @@ input {
 */
 
 .color-wheel {
-    background: radial-gradient(white, transparent calc(1.5 * var(--base-unit))), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+    background: radial-gradient(white, transparent calc(1.5 * var(--base-unit))), conic-gradient(from 90deg, #f00, #f0f, #00f, #0ff, #0f0, #ff0, #f00);
     border-radius: 50%;
     width: calc(3 * var(--base-unit));
     height: calc(3 * var(--base-unit));
@@ -356,6 +362,10 @@ input {
     box-sizing: border-box;
 }
 
+.color-wheel:active::after {
+    transition-duration: 0s;
+}
+
 .color-wheel:hover::after {
     border-color: #888;
 }
@@ -366,6 +376,19 @@ input {
 
 .color-wheel.inactive::after {
     border-color: rgb(68, 68, 68, 0);
+}
+
+.color-wheel > .detail {
+    width: calc(var(--base-unit) * 0.5);
+    height: calc(var(--base-unit) * 0.5);
+    border-radius: 5px;
+    box-shadow: none;
+    top: 0;
+    left: calc(100% + 7px);
+}
+
+.color-wheel:active > .detail {
+    box-shadow: 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
 }
 
 .color-temp {
@@ -396,6 +419,12 @@ input {
     box-sizing: border-box;
 
     border-radius: 7px;
+
+    transition-duration: 0.15s;
+}
+
+.color-temp:active::after, .color-light:active::after {
+    transition-duration: 0s;
 }
 
 .color-temp:hover::after, .color-light:hover::after {

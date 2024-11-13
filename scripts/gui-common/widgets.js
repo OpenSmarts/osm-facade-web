@@ -28,6 +28,8 @@ class Widget extends EventTarget{
         this.element.addEventListener("mouseleave", this.#emitMouseEvent.bind(this));
         this.element.addEventListener("mouseenter", this.#emitMouseEvent.bind(this));
 
+        this.element.addEventListener("click", this.#emitMouseEvent.bind(this));
+
         this.element.addEventListener("touchstart", this.#emitTouchEvent.bind(this));
         this.element.addEventListener("touchend", this.#emitTouchEvent.bind(this));
         this.element.addEventListener("touchmove", this.#emitTouchEvent.bind(this));
@@ -236,7 +238,7 @@ class WidgetCheckbox extends WidgetToggle {
     }
 }
 
-class WidgetSlider extends Widget
+class WidgetDragable extends Widget
 {
     /** @type {number} */
     #primed = 0;
@@ -244,13 +246,92 @@ class WidgetSlider extends Widget
     /** @type {number} */
     #gone = 0;
 
-    #boundUp = null;
-    #boundMove = null;
+    /** @type {(e: MouseEvent) => void} */
+    #m_up = null;
+    /** @type {(e: MouseEvent, b: number) => void} */
+    #m_move = null;
 
+    /** @type {(e: TouchEvent) => void} */
+    #t_up = null;
+    /** @type {(e: TouchEvent) => void} */
+    #t_move = null;
+
+
+    /**
+     * Constructor
+     */
+    constructor ()
+    {
+        super();
+
+        this.#m_up = this.#unpress.bind(this);
+        this.#m_move = this.#move.bind(this);
+        
+        this.addEventListener("mousedown", this.#press);
+        this.addEventListener("mousemove", this.#move);
+        this.addEventListener("mouseup", this.#unpress);
+        this.addEventListener("mouseleave", this.#leave);
+        this.addEventListener("mouseenter", this.#enter);
+    }
+
+    /** @param {MouseEvent} event */
+    #press(event)
+    {
+        this.#primed |= (1 << event.button);
+        this.#move(event);
+    }
+
+    /** @param {MouseEvent} event */
+    #unpress(event)
+    {
+        if (((1 << event.button) & this.#primed) == 0)
+            return;
+        this.#primed -= (1 << event.button);
+        this.#move(event);
+        if (this.#primed == 0)
+        {
+            if (this.#gone)
+            {
+                this.#gone = 0;
+                window.removeEventListener("mouseup", this.#m_up);
+                window.removeEventListener("mousemove", this.#m_move);
+            }
+        }
+    }
+
+    /** @param {MouseEvent} event */
+    #move(event)
+    {
+        this.move(event, this.#primed);
+    }
+
+    /** @param {MouseEvent} event */
+    #leave(event)
+    {
+        if (this.#primed == 0)
+            return;
+        this.#gone = 1;
+        window.addEventListener("mouseup", this.#m_up);
+        window.addEventListener("mousemove", this.#m_move);
+    }
+
+    /** @param {MouseEvent} event */
+    #enter(event)
+    {
+        if (this.#primed == 0)
+            return;
+        this.#gone = 0;
+        window.removeEventListener("mouseup", this.#m_up);
+        window.removeEventListener("mousemove", this.#m_move);
+    }
+}
+
+class WidgetSlider extends WidgetDragable
+{
     /** @type {HTMLElement} */
     #detail = null;
     /** @type {(e: HTMLElement, v: number, p: number) => void} */
-    #detailUpdater = null;
+    #u_detail = null;
 
     /** @type {number} */
     #tmpNum = 0;
@@ -286,37 +367,29 @@ class WidgetSlider extends Widget
         this.#detail = document.createElement("div");
         this.#detail.classList.add("detail");
         this.element.appendChild(this.#detail);
-        
-        this.addEventListener("mousedown", this.#press);
-        this.addEventListener("mousemove", this.#move);
-        this.addEventListener("mouseup", this.#unpress);
-        this.addEventListener("mouseleave", this.#leave);
-        this.addEventListener("mouseenter", this.#enter);
+
         this.addEventListener("change", this.#change);
-        
-        this.#boundUp = this.#unpress.bind(this);
-        this.#boundMove = this.#move.bind(this);
+
         this.#max = max;
         this.#min = min;
         this.#step = step;
         this.#precision = trunc;
         this.#percent = percent;
 
-        this.#detailUpdater = this.update_detail.bind(this);
+        this.#u_detail = this.update_detail.bind(this);
     }
 
-    /** @param {MouseEvent} event */
-    #press(event)
+    /** 
+     * @param {MouseEvent} event
+     * @param {number} btns
+     */
+    move(event, btns)
     {
-        this.#primed |= (1 << event.button);
-        this.#move(event);
-    }
-
-    /** @param {MouseEvent} event */
-    #move(event)
-    {
-        if (this.#primed == 0)
+        if (btns == 0)
+        {
+            this.set(this.#tmpNum);
             return;
+        }
 
         let rect = this.element.getBoundingClientRect();
         let top = 0, bot = 0, point = 0;
@@ -361,46 +434,8 @@ class WidgetSlider extends Widget
             this.#tmpNum = Math.min(Math.max(this.#tmpNum, this.#min), this.#max);
         let percent = (this.#tmpNum - this.#min) / (this.#max - this.#min);
 
-        this.#detailUpdater(this.#detail, this.#tmpNum, percent, this.#percent);
+        this.#u_detail(this.#detail, this.#tmpNum, percent, this.#percent);
         this.element.style.setProperty("--percent", percent);
-    }
-
-    /** @param {MouseEvent} event */
-    #unpress(event)
-    {
-        if (((1 << event.button) & this.#primed) == 0)
-            return;
-        this.#primed -= (1 << event.button);
-        if (this.#primed == 0)
-        {
-            this.set(this.#tmpNum);
-            if (this.#gone)
-            {
-                this.#gone = 0;
-                window.removeEventListener("mouseup", this.#boundUp);
-                window.removeEventListener("mousemove", this.#boundMove);
-            }
-        }
-    }
-
-    /** @param {MouseEvent} event */
-    #leave(event)
-    {
-        if (this.#primed == 0)
-            return;
-        this.#gone = 1;
-        window.addEventListener("mouseup", this.#boundUp);
-        window.addEventListener("mousemove", this.#boundMove);
-    }
-
-    /** @param {MouseEvent} event */
-    #enter(event)
-    {
-        if (this.#primed == 0)
-            return;
-        this.#gone = 0;
-        window.removeEventListener("mouseup", this.#boundUp);
-        window.removeEventListener("mousemove", this.#boundMove);
     }
 
     update_detail(el, val, percent)
@@ -413,7 +448,7 @@ class WidgetSlider extends Widget
 
     setDetailUpdater(updater)
     {
-        this.#detailUpdater = updater;
+        this.#u_detail = updater;
     }
 
     /** @param {number} m */
@@ -514,10 +549,83 @@ class WidgetColorLight extends WidgetSlider
     }
 }
 
-/** @typedef {Widget<number>} WidgetSlider */
-/** @typedef {Widget<string>} WidgetColorWheel */
-/** @typedef {Widget<number>} WidgetColorTemp */
-/** @typedef {Widget<number>} WidgetColorLight */
+class WidgetColorWheel extends WidgetDragable
+{
+    /** @type {Color} */
+    #tmpColor = null;
+    /** @type {HTMLElement} */
+    #detail = null;
+
+    /**
+     * Constructor
+     */
+    constructor ()
+    {
+        super();
+        this.element.classList.add("color-wheel");
+
+        this.#detail = document.createElement("div");
+        this.#detail.classList.add("detail");
+        this.element.appendChild(this.#detail);
+    }
+
+    /** 
+     * @param {MouseEvent} event
+     * @param {number} btns
+     */
+    move(event, btns)
+    {
+        if (btns == 0)
+        {
+            this.set(this.#tmpColor);
+            return;
+        }
+
+        let rect = this.element.getBoundingClientRect();
+        
+        // Points
+        let tmpX = event.clientX;
+        let tmpY = rect.bottom - event.clientY + rect.top;
+        
+        // Percents
+        tmpX = (tmpX - rect.left) / (rect.right - rect.left);
+        tmpY = (tmpY - rect.top) / (rect.bottom - rect.top);
+        
+        // Vecs
+        tmpX = (Math.min(Math.max(0.0, tmpX), 1.0) - 0.5) * 2;
+        tmpY = (Math.min(Math.max(0.0, tmpY), 1.0) - 0.5) * 2;
+
+        // Normalized
+        let mag = Math.sqrt(tmpX * tmpX + tmpY * tmpY);
+        if (mag > 1)
+        {
+            tmpX /= mag;
+            tmpY /= mag;
+        }
+
+        this.element.style.setProperty("--pos-x", tmpX);
+        this.element.style.setProperty("--pos-y", tmpY);
+        this.update_detail(tmpX, tmpY, mag);
+    }
+
+    update_detail(x, y, mag)
+    {
+        if (x == 0)
+        {
+            if (y > 0)
+                this.#tmpColor = Color.from_hsv(Math.PI / 2, mag, 1);
+            else
+                this.#tmpColor = Color.from_hsv(-Math.PI / 2, mag, 1);
+        }
+        else if (x < 0)
+            this.#tmpColor = Color.from_hsv(Math.atan(y / x) + Math.PI, mag, 1);
+        else
+            this.#tmpColor = Color.from_hsv(Math.atan(y / x), mag, 1);
+
+        this.element.style.setProperty("--detail", this.#tmpColor.rgb());
+    }
+}
+
 /** @typedef {Widget<number> & {getGague: () => number, setGague: (value: number) => void}} WidgetThermostat */
 /** @typedef {Widget<any> & {addSelection: (name: string, value: any) => void, setSelection: (name: string) => boolean, removeSelection: (name: string) => void, getSelection: () => string}} WidgetSelectButton */
 
