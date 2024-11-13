@@ -532,7 +532,7 @@ input {
     overflow-x: hidden;
 }
 
-.sel-button > div {
+.sel-button > .button {
     margin: 5px 5px;
     padding: 7px;
 
@@ -547,13 +547,13 @@ input {
     width: fit-content;
 }
 
-.sel-button.h > div {
+.sel-button.h > .button {
     height: auto;
     width: calc(100% - 12px);
 }
 
 
-.sel-button > div[selected] {
+.sel-button > .button.active {
     --w-bg: var(--w-sel-button-selected);
     --w-bg-hover: var(--w-sel-button-selected-hover);
     --w-bg-active: var(--w-sel-button-selected-active);

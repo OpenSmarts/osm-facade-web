@@ -175,6 +175,10 @@ class WidgetToggle extends Widget
 
     #bound = null;
 
+	#falseVal = false;
+
+	#trueVal = true;
+
     constructor ()
     {
         super();
@@ -184,6 +188,7 @@ class WidgetToggle extends Widget
         this.addEventListener("mouseup", this.#toggle);
         this.addEventListener("mouseleave", this.#leave);
         this.addEventListener("mouseenter", this.#enter);
+		this.addEventListener("change", this.#update_ui);
         this.#bound = this.#toggle.bind(this);
     }
 
@@ -204,10 +209,20 @@ class WidgetToggle extends Widget
         }
         if (((1 << event.button) & this.primed) == 0)
             return;
-        this.set(!this.get());
-        this.element.classList.toggle("active", this.get());
+
+		if (this.get() == this.#trueVal)
+        	this.set(this.#falseVal);
+		else
+			this.set(this.#trueVal);
+		
+		this.#update_ui();
         this.primed -= (1 << event.button);
     }
+
+	#update_ui()
+	{
+        this.element.classList.toggle("active", this.get() == this.#trueVal);
+	}
 
     /** @param {MouseEvent} event */
     #leave(event)
@@ -226,6 +241,20 @@ class WidgetToggle extends Widget
         this.gone = 0;
         window.removeEventListener("mouseup", this.#bound);
     }
+
+	setFalseVal(fv)
+	{
+		if (this.get() == this.#falseVal)
+			this.set(fv)
+		this.#falseVal = fv;
+	}
+
+	setTrueVal(tv)
+	{
+		if (this.get() == this.#trueVal)
+			this.set(tv)
+		this.#trueVal = tv;
+	}
 }
 
 class WidgetCheckbox extends WidgetToggle {
@@ -784,6 +813,179 @@ class WidgetThermostat extends Widget
     {
 
     }
+}
+
+class WidgetSelectButton extends Widget
+{
+	/** @type {Array<WidgetToggle>} */
+	#swgs = [];
+
+	/** @type {Array<any>} */
+	#svls = [];
+
+	/** @type {Array<number>} */
+	#selected = [];
+
+	/** @type {number} */
+	#maxSelections = 1;
+
+	/** @type {boolean} */
+	#removeLastOver = true;
+
+	
+	/** @type {(e: CustomEvent) => void} */
+	#binder = null;
+
+	/**
+	 * Constructor
+	 * @param {number} max Maximum allowed to select
+	 * @param {boolean} remove Behaviour when user selects over the maximum. If true, remove the oldest selection to make room.  If false, lock out selections until user removes one.
+	 */
+	constructor(max = 1, remove = true)
+	{
+		super();
+		this.element.classList.add("sel-button");
+
+		this.#binder = this.#selection_change.bind(this);
+
+		this.#maxSelections = max;
+		this.#removeLastOver = remove;
+	}
+
+	#update_val()
+	{
+		let out = [];
+		for(let i = 0; i < this.#selected.length; i++)
+		{
+			out.push(this.#svls[this.#selected[i]]);
+		}
+		this.set(out);
+	}
+
+	#selection_add(idx)
+	{
+		if (this.#selected.length < this.#maxSelections)
+		{
+			this.#selected.push(idx);
+		}
+		else if (this.#removeLastOver)
+		{
+			if(this.#selected.length > 0)
+			{
+				let swap = this.#selected.shift();
+				this.#swgs[swap].set(-swap - 1);
+			}
+			this.#selected.push(idx);
+		}
+		else
+		{
+			this.#swgs[idx].set(-idx - 1);
+		}
+		
+		if (!this.#removeLastOver && this.#selected.length >= this.#maxSelections)
+		{
+			for (let i = 0; i < this.#swgs.length; i++)
+			{
+				if (this.#swgs[i].get() < 0)
+				{
+					this.#swgs[i].setInactive(true);
+				}
+			}
+		}
+
+		this.#update_val();
+	}
+
+	#selection_remove(idx)
+	{
+		for(let i = 0; i < this.#selected.length; i++)
+		{
+			if (this.#selected[i] == idx)
+			{
+				this.#selected.splice(i, 1);
+				i--;
+			}
+		}
+
+		if (this.#selected.length == this.#maxSelections - 1 && this.#removeLastOver == false)
+		{
+			for (let i = 0; i < this.#swgs.length; i++)
+			{
+				if (this.#swgs[i].get() < 0)
+				{
+					this.#swgs[i].setInactive(false);
+				}
+			}
+		}
+
+		this.#update_val();
+	}
+
+	#selection_change(event)
+	{
+		let idx = Math.abs(event.detail.get()) - 1;
+		if (event.detail.get() < 0)
+		{
+			this.#selection_remove(idx);
+		}
+		else
+		{
+			this.#selection_add(idx);
+		}
+	}
+	
+	/**
+	 * Add a new selection with the given
+	 * innerHTML and value when selected
+	 * @param {string} inner Inner HTML of the selection button
+	 * @param {*} val Value emitted when this value is selected
+	 * @returns {number} The index of the new option
+	 */
+	addOption(inner, val)
+	{
+		this.#swgs.push(new WidgetToggle());
+		let idx = this.#swgs.length;
+		this.#swgs[idx - 1].setTrueVal(idx);
+		this.#swgs[idx - 1].setFalseVal(-idx);
+		this.element.appendChild(this.#swgs[idx - 1].element);
+		this.#swgs[idx - 1].element.innerHTML = inner;
+		this.#swgs[idx - 1].element.classList.remove("toggle");
+		this.#swgs[idx - 1].addEventListener("change", this.#binder);
+		this.#svls.push(val);
+	}
+
+	delOption(index)
+	{
+		this.#swgs[index].element.remove();
+		this.#swgs[index].removeEventListener("change", this.#binder);
+		this.#swgs.splice(index, 1);
+		this.#svls.splice(index, 1);
+
+		let need_update = false;
+		for (let i = 0; i < this.#selected.length; i++)
+		{
+			if (this.#selected[i] == index)
+			{
+				this.#selected.splice(index, 1);
+				need_update = true;
+				i--;
+			}
+			else if (this.#selected[i] > index)
+			{
+				this.#selected[i]--;
+			}
+		}
+
+		if (needs_update)
+		{
+			this.#update_val();
+		}
+	}
+
+	indexOf(val)
+	{
+		return this.#svls.indexOf(val);
+	}
 }
 
 /** @typedef {Widget<number> & {getGague: () => number, setGague: (value: number) => void}} WidgetThermostat */

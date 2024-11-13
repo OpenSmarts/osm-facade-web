@@ -20,6 +20,11 @@ class Client {
         content.appendChild(this.wheel.element);
         this.therm = new WidgetThermostat({temp: 72, gague: 69});
         content.appendChild(this.therm.element);
+		this.sel_b = new WidgetSelectButton(2);
+		this.sel_b.addOption("Heat", "heat");
+		this.sel_b.addOption("Cool", "cool");
+		this.sel_b.addOption("Eco", "eco");
+		content.appendChild(this.sel_b.element);
         // content.appendChild(Widget("button").el);
         // content.appendChild(Widget("checkbox").el);
         // content.appendChild(Widget("slider").el);
