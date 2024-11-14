@@ -416,7 +416,8 @@ class WidgetSlider extends WidgetDragable
     {
         if (btns == 0)
         {
-            this.set(this.#tmpNum);
+            if (event.type == "mouseup")
+                this.set(this.#tmpNum);
             return;
         }
 
@@ -608,7 +609,8 @@ class WidgetColorWheel extends WidgetDragable
     {
         if (btns == 0)
         {
-            this.set(this.#tmpColor);
+            if (event.type == "mouseup")
+                this.set(this.#tmpColor);
             return;
         }
 
@@ -639,7 +641,13 @@ class WidgetColorWheel extends WidgetDragable
     #change ()
     {
         this.#tmpColor = this.get();
-        
+
+        let m = this.#tmpColor.hsv_mag();
+        let a = this.#tmpColor.hsv_angle();
+
+        this.element.style.setProperty("--detail", this.#tmpColor.rgb());
+        this.element.style.setProperty("--pos-x", Math.cos(a) * m);
+        this.element.style.setProperty("--pos-y", Math.sin(a) * m);
     }
 
     update_detail(x, y, mag)

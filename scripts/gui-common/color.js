@@ -48,7 +48,7 @@ class Color
         return new Color(r / 255, g / 255, b / 255);
     }
 
-    static from_rgba(r, g, b)
+    static from_rgba(r, g, b, a)
     {
         return new Color(r / 255, g / 255, b / 255, a);
     }
@@ -92,14 +92,130 @@ class Color
         return L.interpolate(out, s);
     }
 
-    hsv_angle()
+    minmax()
     {
-        // TODO
+        let min = this.channels[0];
+        let max = this.channels[0];
+        for (let i = 1; i < this.channels.length; i++)
+        {
+            if (this.channels[i] < min)
+                min = this.channels[i];
+            if (this.channels[i] > max)
+                max = this.channels[i];
+        }
+        return {min: min, max: max};
     }
 
+    rgborder()
+    {
+        let min, max, mid;
+        min = max = mid = this.channels[0];
+
+        for(let i = 1; i < 3; i++)
+        {
+            if (this.channels[i] < min)
+            {
+                mid = min;
+                min = this.channels[i];
+            }
+            else if (this.channels[i] > max)
+            {
+                mid = max;
+                max = this.channels[i];
+            }
+            else
+                mid = this.channels[i];
+        }
+
+        return {min: min, mid: mid, max: max};
+    }
+
+    /**
+     * 
+     * @returns {number}
+     */
+    hsv_angle()
+    {
+        let mm = this.rgborder();
+        
+        // 0 saturation, angle doesn't matter
+        if (mm.max == mm.mid && mm.mid == mm.min)
+            return 0;
+        
+        let sat = 1 - (mm.min / mm.max);
+        mm.mid = (mm.mid - mm.min) / sat;
+        mm.min = 0;
+
+        // Approx equals
+        let eq = Math.abs(mm.max - mm.mid) <= (1 / 256);
+
+        if (mm.mid == 0)
+        {
+            // RED
+            if (mm.max == this.channels[0])
+                return 0;
+            
+            // GREEN
+            if (mm.max == this.channels[1])
+                return 2 * PI_THIRDS;
+            
+            // BLUE
+            return 4 * PI_THIRDS;
+        }
+        else if (eq)
+        {
+            // YELLOW
+            if (this.channels[0] == this.channels[1])
+                return PI_THIRDS;
+
+            // CYAN
+            if (this.channels[1] == this.channels[2])
+                return 3 * PI_THIRDS;
+
+            // MAGENTA
+            return 5 * PI_THIRDS;
+        }
+        else
+        {
+            let out = PI_THIRDS * mm.mid / mm.max;
+            // Red range
+            if (mm.max == this.channels[0])
+            {
+                // Correct for Red-magenta range
+                if (this.channels[1] < this.channels[2])
+                    out = -out;
+
+                out = TWO_PI + out;
+            }
+            // Green range
+            else if (mm.max == this.channels[1])
+            {
+                // Correct for Green-yellow range
+                if (this.channels[0] > this.channels[2])
+                    out = -out;
+
+                out = 2 * PI_THIRDS + out;
+            }
+            // Blue range
+            else
+            {
+                // Correct for Blue-cyan range
+                if (this.channels[1] > this.channels[0])
+                    out = -out;
+                    
+                out = 4 * PI_THIRDS + out;
+            }
+            return out;
+        }
+    }
+
+    /**
+     * @returns {number}
+     */
     hsv_mag()
     {
-        // TODO
+        let mm = this.rgborder();
+        return 1 - (mm.min / mm.max);
     }
 }
 
