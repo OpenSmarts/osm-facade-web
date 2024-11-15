@@ -85,6 +85,7 @@ class Widget extends EventTarget{
             this.dispatchEvent(new CustomEvent("inactive", {detail: {widget: this, event: new TouchEvent(event.type, event)}}));
         else
             this.dispatchEvent(new TouchEvent(event.type, event));
+        event.preventDefault();
     }
 
     /** @param {Event} event */
@@ -388,6 +389,7 @@ class WidgetDragable extends Widget
     #touch(event)
     {
         console.log(event.type, event.changedTouches);
+        event.preventDefault();
     }
 }
 
