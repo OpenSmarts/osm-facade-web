@@ -1,8 +1,8 @@
 /**
- * @typedef {"button" | "toggle" | "slider" | "checkbox" | "color-wheel" | "color-temp" | "color-light" | "thermostat" | "sel-button"} WidgetType
- */
-
-/** @template {*} T */
+ * The base Widget class.  Represents an interactible
+ * value-producing object in the browser, like an input.
+ * @template {*} T
+*/
 class Widget extends EventTarget{
     /** @type {T} */
     #value = null;
@@ -100,7 +100,10 @@ class Widget extends EventTarget{
     handleClick() {}
 }
 
-/** @typedef {Widget<boolean>} WidgetButton */
+/**
+ * Represents a basic button widget
+ * @extends Widget<boolean>
+*/
 class WidgetButton extends Widget
 {
     /** @type {number} */
@@ -164,7 +167,11 @@ class WidgetButton extends Widget
     }
 }
 
-/** @typedef {Widget<boolean>} WidgetToggle */
+/**
+ * A toggle widget, similar to a WidgetCheckbox, but meant
+ * to be used for on/off power states.
+ * @extends Widget<boolean>
+ */
 class WidgetToggle extends Widget
 {
     /** @type {number} */
@@ -257,6 +264,11 @@ class WidgetToggle extends Widget
 	}
 }
 
+/**
+ * Effectively the same as a WidgetToggle, just with a more
+ * "checkbox" look and feel
+ * @extends WidgetToggle
+ */
 class WidgetCheckbox extends WidgetToggle {
 
     constructor()
@@ -267,6 +279,15 @@ class WidgetCheckbox extends WidgetToggle {
     }
 }
 
+/**
+ * Base class for widgets where mouse movement should be considered
+ * whenever the mouse is within the widget bounds.  Helps
+ * to make sure that if the mouse starts clicking and then moves
+ * somewhere outside the widget, the widget still picks up on that
+ * mouse activity until the "mouseup" event occurs.
+ * @extends Widget<T>
+ * @template T
+ */
 class WidgetDragable extends Widget
 {
     /** @type {number} */
@@ -301,11 +322,17 @@ class WidgetDragable extends Widget
         this.addEventListener("mouseup", this.#unpress);
         this.addEventListener("mouseleave", this.#leave);
         this.addEventListener("mouseenter", this.#enter);
+
+        this.addEventListener("touchstart", this.#touch);
+        this.addEventListener("touchend", this.#touch);
+        this.addEventListener("touchmove", this.#touch);
+        this.addEventListener("touchcancel", this.#touch);
     }
 
     /** @param {MouseEvent} event */
     #press(event)
     {
+        console.log("Press!");
         this.#primed |= (1 << event.button);
         this.#move(event);
     }
@@ -313,6 +340,7 @@ class WidgetDragable extends Widget
     /** @param {MouseEvent} event */
     #unpress(event)
     {
+        console.log("Unpress!");
         if (((1 << event.button) & this.#primed) == 0)
             return;
         this.#primed -= (1 << event.button);
@@ -331,7 +359,7 @@ class WidgetDragable extends Widget
     /** @param {MouseEvent} event */
     #move(event)
     {
-        this.move(event, this.#primed);
+        this.move(event, this.#primed, this.#gone);
     }
 
     /** @param {MouseEvent} event */
@@ -353,8 +381,20 @@ class WidgetDragable extends Widget
         window.removeEventListener("mouseup", this.#m_up);
         window.removeEventListener("mousemove", this.#m_move);
     }
+
+    /**
+     * @param {TouchEvent} event 
+     */
+    #touch(event)
+    {
+        console.log(event.type, event.changedTouches);
+    }
 }
 
+/**
+ * A basic slider widget.  Handles both vertical and horizontal sliders.
+ * @extends WidgetDragable<number>
+ */
 class WidgetSlider extends WidgetDragable
 {
     /** @type {HTMLElement} */
@@ -411,8 +451,9 @@ class WidgetSlider extends WidgetDragable
     /** 
      * @param {MouseEvent} event
      * @param {number} btns
+     * @param {boolean} gone
      */
-    move(event, btns)
+    move(event, btns, gone)
     {
         if (btns == 0)
         {
@@ -503,6 +544,10 @@ class WidgetSlider extends WidgetDragable
     }
 }
 
+/**
+ * Like a slider, but shows color temperature instead.
+ * @extends WidgetSlider
+ */
 class WidgetColorTemp extends WidgetSlider 
 {
     /** @type {Color} */
@@ -516,12 +561,6 @@ class WidgetColorTemp extends WidgetSlider
     {
         super(6000, 2700, 100);
         this.element.classList.replace("slider", "color-temp");
-        
-        let fills = this.element.getElementsByClassName("fill");
-        for(let f of fills)
-        {
-            f.remove();
-        }
 
         this.setDetailUpdater(this.update_detail.bind(this));
         this.set(2700);
@@ -544,6 +583,10 @@ class WidgetColorTemp extends WidgetSlider
     }
 }
 
+/**
+ * Like a slider, but shows light/dark scale instead.
+ * @extends WidgetSlider
+ */
 class WidgetColorLight extends WidgetSlider 
 {
     /** @type {Color} */
@@ -579,6 +622,12 @@ class WidgetColorLight extends WidgetSlider
     }
 }
 
+/**
+ * Lets the user easily pick a color based on the HSV color wheel.
+ * Pair with a WidgetColorLight to allow for arbitrary lightness values
+ * as well.
+ * @extends WidgetDragable<Color>
+ */
 class WidgetColorWheel extends WidgetDragable
 {
     /** @type {Color} */
@@ -674,6 +723,9 @@ class WidgetColorWheel extends WidgetDragable
  * @property {number} gague
  */
 
+/**
+ * @extends Widget<ThermSpec>
+ */
 class WidgetThermostat extends Widget
 {
     /** @type {HTMLElement} */
@@ -809,6 +861,7 @@ class WidgetThermostat extends Widget
         this.#cold_color = cold;
         this.#temperate_color = temperate;
         this.#hot_color = hot;
+        this.#update_ui();
     }
 
     /**
@@ -819,10 +872,17 @@ class WidgetThermostat extends Widget
      */
     setZoneStops(ct, th)
     {
-
+        this.#cold_temp = ct;
+        this.#temp_hot = th;
+        this.#update_ui();
     }
 }
 
+/**
+ * A group of buttons from which any value can be selected.
+ * May allow for more than one selection.
+ * @extends Widget<any[]>
+ */
 class WidgetSelectButton extends Widget
 {
 	/** @type {Array<WidgetToggle>} */
@@ -960,6 +1020,7 @@ class WidgetSelectButton extends Widget
 		this.#swgs[idx - 1].element.classList.remove("toggle");
 		this.#swgs[idx - 1].addEventListener("change", this.#binder);
 		this.#svls.push(val);
+        return idx;
 	}
 
 	delOption(index)
@@ -986,6 +1047,13 @@ class WidgetSelectButton extends Widget
 
 		if (needs_update)
 		{
+            if (!this.#removeLastOver && this.#selected.length == this.#maxSelections - 1)
+            {
+                for (let i = 0; i < this.#swgs.length; i++)
+                {
+                    this.#swgs[i].setInactive(false);
+                }
+            }
 			this.#update_val();
 		}
 	}
@@ -996,7 +1064,10 @@ class WidgetSelectButton extends Widget
 	}
 }
 
-/** @typedef {Widget<number> & {getGague: () => number, setGague: (value: number) => void}} WidgetThermostat */
-/** @typedef {Widget<any> & {addSelection: (name: string, value: any) => void, setSelection: (name: string) => boolean, removeSelection: (name: string) => void, getSelection: () => string}} WidgetSelectButton */
+/**
+ * @extends WidgetDragable<number>
+ */
+class WidgetScrubber extends WidgetDragable
+{
 
-// export { Widget };
+}

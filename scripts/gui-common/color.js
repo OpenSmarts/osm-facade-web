@@ -232,14 +232,3 @@ const PI_THIRDS = Math.PI / 3;
 const TWO_PI = Math.PI * 2;
 
 const DIVS = [RED, YELLOW, GREEN, CYAN, BLUE, MAGENTA, RED];
-
-/**
- * Interpolate between two colors
- * @param {Color} a 
- * @param {Color} b 
- * @param {number} p 
- */
-function interpolate(a, b, p)
-{
-
-}
