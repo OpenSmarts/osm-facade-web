@@ -1108,13 +1108,17 @@ class WidgetSelectButton extends Widget
 			if(this.#selected.length > 0)
 			{
 				let swap = this.#selected.shift();
-				this.#swgs[swap].set(-swap - 1);
+                this.#swgs[swap].removeEventListener("change", this.#binder);
+			    this.#swgs[swap].set(-swap - 1);
+                this.#swgs[swap].addEventListener("change", this.#binder);
 			}
 			this.#selected.push(idx);
 		}
 		else
 		{
+            this.#swgs[idx].removeEventListener("change", this.#binder);
 			this.#swgs[idx].set(-idx - 1);
+            this.#swgs[idx].addEventListener("change", this.#binder);
 		}
 		
 		if (!this.#removeLastOver && this.#selected.length >= this.#maxSelections)
