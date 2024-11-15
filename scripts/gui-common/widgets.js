@@ -1234,5 +1234,8 @@ class WidgetSelectButton extends Widget
  */
 class WidgetScrubber extends WidgetDragable
 {
-
+    constructor()
+    {
+        
+    }
 }

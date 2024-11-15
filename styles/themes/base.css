@@ -41,4 +41,8 @@
     --w-sel-button-selected: #0084ff;
     --w-sel-button-selected-hover: #3ea2ff;
     --w-sel-button-selected-active: #3ea2ff;
+
+    /* Scrubber */
+    --w-scr-nub: #eee;
+    --w-scr-nub-active: white;
 }
