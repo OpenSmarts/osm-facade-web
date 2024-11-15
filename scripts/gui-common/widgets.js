@@ -99,7 +99,7 @@ class Widget extends EventTarget{
 
         if (event.type == "touchstart")
             this.element.classList.add("touch");
-        else if (event.type == "touchend")
+        else if (event.type == "touchend" || event.type == "touchcancel")
             this.element.classList.remove("touch");
 
         if (this.inactive)
@@ -722,7 +722,7 @@ class WidgetColorTemp extends WidgetSlider
             out = this.ORANGE.interpolate(this.WHITE, percent / 0.7);
         else
             out = this.WHITE.interpolate(this.BLUE, (percent - 0.7) / 0.3);
-        el.style.setProperty("--detail", out.rgb());
+        this.element.style.setProperty("--detail", out.rgb());
     }
 }
 
@@ -741,12 +741,6 @@ class WidgetColorLight extends WidgetSlider
     {
         super(1, 0, 0.01, 0, 1);
         this.element.classList.replace("slider", "color-light");
-        
-        let fills = this.element.getElementsByClassName("fill");
-        for(let f of fills)
-        {
-            f.remove();
-        }
 
         this.setDetailUpdater(this.update_detail.bind(this));
         this.set(0);
@@ -761,7 +755,7 @@ class WidgetColorLight extends WidgetSlider
     update_detail(el, val, percent)
     {
         let out = this.BLACK.interpolate(this.WHITE, percent);
-        el.style.setProperty("--detail", out.rgb());
+        this.element.style.setProperty("--detail", out.rgb());
     }
 }
 

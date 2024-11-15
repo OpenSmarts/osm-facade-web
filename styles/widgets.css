@@ -129,7 +129,7 @@ input {
     width: calc(3 * var(--base-unit));
 }
 
-.slider > .fill {
+.slider > .fill, .color-light > .fill, .color-temp > .fill {
     overflow: hidden;
     width: 100%;
     height: 100%;
@@ -409,6 +409,12 @@ input {
     overflow: unset;
 }
 
+.color-temp.h {
+    height: var(--base-unit);
+    width: calc(3 * var(--base-unit));
+    background: linear-gradient(to left, rgb(190, 200, 255), white 30%, rgb(250, 160, 100));
+}
+
 .color-light {
     width: var(--base-unit);
     height: calc(3 * var(--base-unit));
@@ -417,31 +423,49 @@ input {
     overflow: unset;
 }
 
-.color-temp::after, .color-light::after {
+.color-light.h {
+    height: var(--base-unit);
+    width: calc(3 * var(--base-unit));
+    background: linear-gradient(to left, white, black);
+}
+
+.color-temp > .fill::after, .color-light > .fill::after {
     content: '';
-    width: calc(100% + 8px);
-    height: 14px;
+    width: 18px;
+    height: 18px;
     border: 5px solid #444;
     position: absolute;
-    bottom: calc(100% * var(--percent) - 7px);
-    left: -4px;
+    bottom: calc(100% * var(--percent) - 9px);
+    left: calc(50% - 9px);
 
     box-sizing: border-box;
 
-    border-radius: 7px;
+    border-radius: 50%;
 
     transition-duration: 0.15s;
 }
 
-.color-temp:active::after, .color-light:active::after, .color-temp.touch::after, .color-light.touch::after {
+.color-light > .fill::after {
+    border-color: color-mix(in srgb, white calc(100% * (1 - var(--percent))), black calc(100% * var(--percent)));
+}
+
+.color-temp.h > .fill::after, .color-light.h > .fill::after {
+    left: calc(100% * var(--percent) - 7.5px);
+    bottom: calc(50% - 7.5px);
+}
+
+.color-temp:active > .fill::after,
+.color-light:active > .fill::after,
+.color-temp.touch >  .fill::after,
+.color-light.touch >  .fill::after {
     transition-duration: 0s;
 }
 
-.color-temp:hover::after, .color-light:hover::after {
+.color-temp:hover > .fill::after {
     border-color: #888;
 }
 
-.color-temp.inactive::after, .color-light.inactive::after {
+.color-temp.inactive > .fill::after, .color-light.inactive > .fill::after {
     border-color: rgb(68, 68, 68, 0);
 }
 
