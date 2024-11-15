@@ -1,3 +1,16 @@
+( function () {
+    window.SCROLLING = false;
+    function scroll(event) {
+        window.SCROLLING = true;
+    }
+    function unscroll(event) {
+        window.SCROLLING = false;
+    }
+    window.addEventListener("scroll", scroll);
+    window.addEventListener("scrollend", unscroll);
+})();
+
+
 /**
  * The base Widget class.  Represents an interactible
  * value-producing object in the browser, like an input.
@@ -81,10 +94,19 @@ class Widget extends EventTarget{
     /** @param {TouchEvent} event */
     #emitTouchEvent(event)
     {
+        //if (window.SCROLLING)
+        //    return;
+
+        if (event.type == "touchstart")
+            this.element.classList.add("touch");
+        else if (event.type == "touchend")
+            this.element.classList.remove("touch");
+
         if (this.inactive)
             this.dispatchEvent(new CustomEvent("inactive", {detail: {widget: this, event: new TouchEvent(event.type, event)}}));
         else
             this.dispatchEvent(new TouchEvent(event.type, event));
+
         event.preventDefault();
     }
 
@@ -110,6 +132,8 @@ class WidgetButton extends Widget
     /** @type {number} */
     pressing = 0;
 
+    #touching = {count: 0};
+
     gone = 0;
 
     #bound = null;
@@ -122,6 +146,8 @@ class WidgetButton extends Widget
         this.addEventListener("mouseup", this.#unpress);
         this.addEventListener("mouseleave", this.#leave);
         this.addEventListener("mouseenter", this.#enter);
+        this.addEventListener("touchstart", this.#touchstart);
+        this.addEventListener("touchend", this.#touchend);
         this.#bound = this.#unpress.bind(this);
     }
 
@@ -166,12 +192,45 @@ class WidgetButton extends Widget
         this.gone = 0;
         window.removeEventListener("mouseup", this.#bound);
     }
+
+    /**
+     * @param {TouchEvent} event 
+     */
+    #touchend(event)
+    {
+        for(let i of event.changedTouches)
+        {
+            if (this.#touching[i.identifier] == 1)
+            {
+                delete this.#touching[i.identifier];
+                this.#touching.count--;
+            }
+        }
+
+        if (this.#touching.count == 0)
+            this.set(false);
+    }
+
+    /**
+     * @param {TouchEvent} event 
+     */
+    #touchstart(event)
+    {
+        if (this.#touching.count == 0)
+            this.set(true);
+
+        for(let i of event.changedTouches)
+        {
+            this.#touching.count++;
+            this.#touching[i.identifier] = 1;
+        }
+    }
 }
 
 /**
  * A toggle widget, similar to a WidgetCheckbox, but meant
  * to be used for on/off power states.
- * @extends Widget<boolean>
+ * @extends Widget<*>
  */
 class WidgetToggle extends Widget
 {
@@ -196,7 +255,8 @@ class WidgetToggle extends Widget
         this.addEventListener("mouseup", this.#toggle);
         this.addEventListener("mouseleave", this.#leave);
         this.addEventListener("mouseenter", this.#enter);
-		this.addEventListener("change", this.#update_ui);
+        this.addEventListener("change", this.#update_ui);
+        this.addEventListener("touchend", this.#touchend);
         this.#bound = this.#toggle.bind(this);
     }
 
@@ -248,6 +308,30 @@ class WidgetToggle extends Widget
             return;
         this.gone = 0;
         window.removeEventListener("mouseup", this.#bound);
+    }
+
+    /** @param {TouchEvent} event */
+    #touchend(event)
+    {
+        if (event.changedTouches.length < 1)
+            return;
+
+        let rect = this.element.getBoundingClientRect();
+
+        for (let i of event.changedTouches)
+        {
+            if (i.clientX < rect.right &&
+                i.clientX > rect.left &&
+                i.clientY > rect.top &&
+                i.clientY < rect.bottom
+            ) {
+                if (this.get() == this.#trueVal)
+                    this.set(this.#falseVal);
+                else
+                    this.set(this.#trueVal);
+                return;
+            }
+        }
     }
 
 	setFalseVal(fv)
@@ -302,16 +386,16 @@ class WidgetDragable extends Widget
     /** @type {(e: MouseEvent, b: number) => void} */
     #m_move = null;
 
-    /** @type {(e: TouchEvent) => void} */
-    #t_up = null;
-    /** @type {(e: TouchEvent) => void} */
-    #t_move = null;
+    #touches = {count: 0};
+
+    /** @type {number} */
+    #max_t;
 
 
     /**
      * Constructor
      */
-    constructor ()
+    constructor (maxTouches = 1)
     {
         super();
 
@@ -328,12 +412,13 @@ class WidgetDragable extends Widget
         this.addEventListener("touchend", this.#touch);
         this.addEventListener("touchmove", this.#touch);
         this.addEventListener("touchcancel", this.#touch);
+
+        this.#max_t = 2;
     }
 
     /** @param {MouseEvent} event */
     #press(event)
     {
-        console.log("Press!");
         this.#primed |= (1 << event.button);
         this.#move(event);
     }
@@ -341,7 +426,6 @@ class WidgetDragable extends Widget
     /** @param {MouseEvent} event */
     #unpress(event)
     {
-        console.log("Unpress!");
         if (((1 << event.button) & this.#primed) == 0)
             return;
         this.#primed -= (1 << event.button);
@@ -384,12 +468,47 @@ class WidgetDragable extends Widget
     }
 
     /**
+     * Set the maximum number of continuous touches to allow
+     * @param {number} t 
+     */
+    setMaxTouches(t)
+    {
+        this.#max_t = t;
+    }
+
+    /**
      * @param {TouchEvent} event 
      */
     #touch(event)
     {
-        console.log(event.type, event.changedTouches);
-        event.preventDefault();
+        if (event.type == "touchstart")
+        {
+            if (this.#touches.count < this.#max_t)
+            {
+                this.#touches[event.changedTouches[0].identifier] = 1;
+                this.#touches.count++;
+            }
+            else
+                return;
+        }
+
+        if (event.type == "touchend")
+        {
+            if (this.#touches[event.changedTouches[0].identifier] == 1)
+            {
+                delete this.#touches[event.changedTouches[0].identifier];
+                this.#touches.count--;
+            }
+        }
+
+        let out = [];
+        for(let t of event.changedTouches)
+        {
+            if (this.#touches[t.identifier] == 1)
+                out.push(t);
+        }
+
+        this.touch(event.type, out);
     }
 }
 
@@ -450,33 +569,21 @@ class WidgetSlider extends WidgetDragable
         this.#u_detail = this.update_detail.bind(this);
     }
 
-    /** 
-     * @param {MouseEvent} event
-     * @param {number} btns
-     * @param {boolean} gone
-     */
-    move(event, btns, gone)
+    #common_move(x, y)
     {
-        if (btns == 0)
-        {
-            if (event.type == "mouseup")
-                this.set(this.#tmpNum);
-            return;
-        }
-
         let rect = this.element.getBoundingClientRect();
         let top = 0, bot = 0, point = 0;
         if (this.element.classList.contains("h"))
         {
             top = rect.right;
             bot = rect.left;
-            point = event.clientX;
+            point = x;
         }
         else
         {
             top = rect.bottom;
             bot = rect.top;
-            point = top - event.clientY + bot;
+            point = top - y + bot;
         }
 
         if (point < bot && this.#tmpNum != this.#min)
@@ -493,6 +600,40 @@ class WidgetSlider extends WidgetDragable
             this.#tmpNum = v;
         }
         this.#update_ui();
+    }
+
+    /** 
+     * @param {MouseEvent} event
+     * @param {number} btns
+     * @param {boolean} gone
+     */
+    move(event, btns, gone)
+    {
+        if (btns == 0)
+        {
+            if (event.type == "mouseup")
+                this.set(this.#tmpNum);
+            return;
+        }
+
+        this.#common_move(event.clientX, event.clientY);
+    }
+
+    /**
+     * @param {"touchstart" | "touchend" | "touchmove"} type 
+     * @param {Touch[]} touches 
+     */
+    touch(type, touches)
+    {
+        if (type == "touchend")
+        {
+            this.set(this.#tmpNum);
+        }
+
+        if (touches.length < 1)
+            return;
+
+        this.#common_move(touches[0].clientX, touches[0].clientY);
     }
 
     #change ()
@@ -652,24 +793,13 @@ class WidgetColorWheel extends WidgetDragable
         this.addEventListener("change", this.#change);
     }
 
-    /** 
-     * @param {MouseEvent} event
-     * @param {number} btns
-     */
-    move(event, btns)
+    #common_move(x, y)
     {
-        if (btns == 0)
-        {
-            if (event.type == "mouseup")
-                this.set(this.#tmpColor);
-            return;
-        }
-
         let rect = this.element.getBoundingClientRect();
         
         // Points
-        let tmpX = event.clientX - rect.width / 2;
-        let tmpY = rect.bottom - event.clientY + rect.top - rect.height / 2;
+        let tmpX = x - rect.width / 2;
+        let tmpY = rect.bottom - y + rect.top - rect.height / 2;
         
         // Percents
         tmpX = (tmpX - rect.left) / ((rect.right - rect.left) / 2);
@@ -687,6 +817,41 @@ class WidgetColorWheel extends WidgetDragable
         this.element.style.setProperty("--pos-x", tmpX);
         this.element.style.setProperty("--pos-y", tmpY);
         this.update_detail(tmpX, tmpY, mag);
+    }
+
+    /** 
+     * @param {MouseEvent} event
+     * @param {number} btns
+     */
+    move(event, btns)
+    {
+        if (btns == 0)
+        {
+            if (event.type == "mouseup")
+                this.set(this.#tmpColor);
+            return;
+        }
+
+        this.#common_move(event.clientX, event.clientY);
+    }
+
+    /**
+     * @param {"touchstart" | "touchend" | "touchmove"} type 
+     * @param {Touch[]} touches 
+     */
+    touch(type, touches)
+    {
+        if (type == "touchend")
+        {
+            this.set(this.#tmpColor);
+        }
+
+        if (touches.length < 1)
+        {
+            return;
+        }
+
+        this.#common_move(touches[0].clientX, touches[0].clientY);
     }
 
     #change ()
