@@ -44,5 +44,6 @@
 
     /* Scrubber */
     --w-scr-nub: #eee;
+    --w-scr-nub-hover: white;
     --w-scr-nub-active: white;
 }

@@ -8,8 +8,12 @@ class Client {
     constructor (content)
     {
         /** @type {WidgetToggle} */
-        this.toggle = new WidgetCheckbox();
+        this.cb = new WidgetCheckbox();
+        content.appendChild(this.cb.element);
+        this.toggle = new WidgetToggle();
         content.appendChild(this.toggle.element);
+        this.button = new WidgetButton();
+        content.appendChild(this.button.element);
         this.slider = new WidgetSlider();
         content.appendChild(this.slider.element);
         this.temp = new WidgetColorTemp();
@@ -18,13 +22,15 @@ class Client {
         content.appendChild(this.light.element);
         this.wheel = new WidgetColorWheel();
         content.appendChild(this.wheel.element);
-        this.therm = new WidgetThermostat({temp: 72, gague: 69});
+        this.therm = new WidgetThermostat(72, 69);
         content.appendChild(this.therm.element);
 		this.sel_b = new WidgetSelectButton(2);
 		this.sel_b.addOption("Heat", "heat");
 		this.sel_b.addOption("Cool", "cool");
 		this.sel_b.addOption("Eco", "eco");
 		content.appendChild(this.sel_b.element);
+        this.scrubber = new WidgetScrubber();
+        content.appendChild(this.scrubber.element);
         // content.appendChild(Widget("button").el);
         // content.appendChild(Widget("checkbox").el);
         // content.appendChild(Widget("slider").el);

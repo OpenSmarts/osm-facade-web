@@ -17,14 +17,14 @@
  * @template {*} T
 */
 class Widget extends EventTarget{
-    /** @type {T} */
-    #value = null;
+    /** @type {object} */
+    #value = {};
 
     /** @type {HTMLElement} */
     element = null;
 
     /** @type {boolean} */
-    inactive = false;
+    #inactive = false;
     
     /**
      * Construct a new widget
@@ -51,41 +51,57 @@ class Widget extends EventTarget{
         this.element.addEventListener("contextmenu", this.#emitContextEvent.bind(this));
     }
 
-    /** @returns {T} */
-    get()
+    /**
+     * Get a specific property of the widget, or "value" if none is supplied.
+     * @param {string} [id]
+     * @returns {*}
+     */
+    get(id = "value")
     {
-        return this.#value;
+        return this.#value[id];
     }
 
     /** @param {T} v */
     set(v)
     {
-        this.#value = v;
+        this.#value["value"] = v;
         this.#emitChangeEvent();
+    }
+
+    /**
+     * @param {string} id
+     * @param {*} v
+     * @param {boolean} [emit]
+     */
+    setId(id, v, emit = false)
+    {
+        this.#value[id] = v;
+        if (emit)
+            this.#emitChangeEvent();
     }
 
     /** @param {boolean} i */
     setInactive (i)
     {
         this.element.classList.toggle("inactive", i);
-        this.inactive = i;
+        this.#inactive = i;
     }
 
     /** @returns {boolean} */
     getInactive ()
     {
-        return this.inactive;
+        return this.#inactive;
     }
 
-    #emitChangeEvent()
+    #emitChangeEvent(id)
     {
-        this.dispatchEvent(new CustomEvent("change", {detail: this}));
+        this.dispatchEvent(new CustomEvent("change", {detail: {widget: this, changed: id}}));
     }
 
     /** @param {MouseEvent} event */
     #emitMouseEvent(event)
     {
-        if (this.inactive)
+        if (this.#inactive)
             this.dispatchEvent(new CustomEvent("inactive", {detail: {widget: this, event: new MouseEvent(event.type, event)}}));
         else
             this.dispatchEvent(new MouseEvent(event.type, event));
@@ -102,7 +118,7 @@ class Widget extends EventTarget{
         else if (event.type == "touchend" || event.type == "touchcancel")
             this.element.classList.remove("touch");
 
-        if (this.inactive)
+        if (this.#inactive)
             this.dispatchEvent(new CustomEvent("inactive", {detail: {widget: this, event: new TouchEvent(event.type, event)}}));
         else
             this.dispatchEvent(new TouchEvent(event.type, event));
@@ -113,14 +129,14 @@ class Widget extends EventTarget{
     /** @param {Event} event */
     #emitContextEvent(event)
     {
-        if (this.inactive)
+        if (this.#inactive)
             this.dispatchEvent(new CustomEvent("inactive", {detail: {widget: this, event: new Event(event.type, event)}}));
         else
             this.dispatchEvent(new Event(event.type, event));
         event.preventDefault();
     }
 
-    handleClick() {}
+    update() {}
 }
 
 /**
@@ -130,15 +146,15 @@ class Widget extends EventTarget{
 class WidgetButton extends Widget
 {
     /** @type {number} */
-    pressing = 0;
+    #pressing = 0;
 
     #touching = {count: 0};
 
-    gone = 0;
+    #gone = 0;
 
     #bound = null;
 
-    constructor ()
+    constructor (tv = true, fv = false)
     {
         super();
         this.element.classList.add("button");
@@ -149,27 +165,30 @@ class WidgetButton extends Widget
         this.addEventListener("touchstart", this.#touchstart);
         this.addEventListener("touchend", this.#touchend);
         this.#bound = this.#unpress.bind(this);
+        this.setId("true", tv);
+        this.setId("false", fv);
+        this.set(fv);
     }
 
     /** @param {MouseEvent} event */
     #press(event)
     {
-        this.pressing |= (1 << event.button);
-        this.set(true);
+        this.#pressing |= (1 << event.button);
+        this.set(this.get("true"));
     }
 
     #unpress (event)
     {
-        if (((1 << event.button) & this.pressing) == 0)
+        if (((1 << event.button) & this.#pressing) == 0)
             return;
 
-        this.pressing -= (1 << event.button);
-        if (this.pressing == 0)
+        this.#pressing -= (1 << event.button);
+        if (this.#pressing == 0)
         {
-            this.set(false);
-            if (this.gone)
+            this.set(this.get("false"));
+            if (this.#gone)
             {
-                this.gone = 0;
+                this.#gone = 0;
                 window.removeEventListener("mouseup", this.#bound);
             }
         }
@@ -178,9 +197,9 @@ class WidgetButton extends Widget
     /** @param {MouseEvent} event */
     #leave(event)
     {
-        if (this.pressing == 0)
+        if (this.#pressing == 0)
             return;
-        this.gone = 1;
+        this.#gone = 1;
         window.addEventListener("mouseup", this.#bound);
     }
 
@@ -189,7 +208,7 @@ class WidgetButton extends Widget
     {
         if (this.primed == 0)
             return;
-        this.gone = 0;
+        this.#gone = 0;
         window.removeEventListener("mouseup", this.#bound);
     }
 
@@ -208,7 +227,7 @@ class WidgetButton extends Widget
         }
 
         if (this.#touching.count == 0)
-            this.set(false);
+            this.set(this.get("false"));
     }
 
     /**
@@ -217,7 +236,7 @@ class WidgetButton extends Widget
     #touchstart(event)
     {
         if (this.#touching.count == 0)
-            this.set(true);
+            this.set(this.get("true"));
 
         for(let i of event.changedTouches)
         {
@@ -235,18 +254,14 @@ class WidgetButton extends Widget
 class WidgetToggle extends Widget
 {
     /** @type {number} */
-    primed = 0;
+    #primed = 0;
 
     /** @type {number} */
-    gone = 0;
+    #gone = 0;
 
     #bound = null;
 
-	#falseVal = false;
-
-	#trueVal = true;
-
-    constructor ()
+    constructor (value = false, tv = true, fv = false)
     {
         super();
         this.element.classList.add("button");
@@ -255,58 +270,61 @@ class WidgetToggle extends Widget
         this.addEventListener("mouseup", this.#toggle);
         this.addEventListener("mouseleave", this.#leave);
         this.addEventListener("mouseenter", this.#enter);
-        this.addEventListener("change", this.#update_ui);
+        this.addEventListener("change", this.update);
         this.addEventListener("touchend", this.#touchend);
         this.#bound = this.#toggle.bind(this);
+        super.setId("false", fv);
+        super.setId("true", tv);
+        this.set(value);
     }
 
     /** @param {MouseEvent} event */
     #prime(event)
     {
-        this.primed |= (1 << event.button);
+        this.#primed |= (1 << event.button);
     }
 
     /** @param {MouseEvent} event */
     #toggle(event)
     {
-        if (this.gone)
+        if (this.#gone)
         {
-            this.primed = 0;
-            this.gone = 0;
+            this.#primed = 0;
+            this.#gone = 0;
             window.removeEventListener("mouseup", this.#bound);
         }
-        if (((1 << event.button) & this.primed) == 0)
+        if (((1 << event.button) & this.#primed) == 0)
             return;
 
-		if (this.get() == this.#trueVal)
-        	this.set(this.#falseVal);
+		if (this.get() == this.get("true"))
+        	this.set(this.get("false"));
 		else
-			this.set(this.#trueVal);
+			this.set(this.get("true"));
 		
-		this.#update_ui();
-        this.primed -= (1 << event.button);
+		this.update();
+        this.#primed -= (1 << event.button);
     }
 
-	#update_ui()
+	update()
 	{
-        this.element.classList.toggle("active", this.get() == this.#trueVal);
+        this.element.classList.toggle("active", this.get() == this.get("true"));
 	}
 
     /** @param {MouseEvent} event */
     #leave(event)
     {
-        if (this.primed == 0)
+        if (this.#primed == 0)
             return;
-        this.gone = 1;
+        this.#gone = 1;
         window.addEventListener("mouseup", this.#bound);
     }
 
     /** @param {MouseEvent} event */
     #enter(event)
     {
-        if (this.primed == 0)
+        if (this.#primed == 0)
             return;
-        this.gone = 0;
+        this.#gone = 0;
         window.removeEventListener("mouseup", this.#bound);
     }
 
@@ -325,28 +343,26 @@ class WidgetToggle extends Widget
                 i.clientY > rect.top &&
                 i.clientY < rect.bottom
             ) {
-                if (this.get() == this.#trueVal)
-                    this.set(this.#falseVal);
+                if (this.get() == this.get("true"))
+                    this.set(this.get("false"));
                 else
-                    this.set(this.#trueVal);
+                    this.set(this.get("true"));
                 return;
             }
         }
     }
 
-	setFalseVal(fv)
-	{
-		if (this.get() == this.#falseVal)
-			this.set(fv)
-		this.#falseVal = fv;
-	}
-
-	setTrueVal(tv)
-	{
-		if (this.get() == this.#trueVal)
-			this.set(tv)
-		this.#trueVal = tv;
-	}
+    setId(id, v, emit = false)
+    {
+        if (id == "false" || id == "true")
+        {
+            if (this.get() == this.get(id))
+                super.setId("value", v);
+            super.setId(id, v, emit);
+        }
+        else
+            super.setId(id, v, emit);
+    }
 }
 
 /**
@@ -356,9 +372,9 @@ class WidgetToggle extends Widget
  */
 class WidgetCheckbox extends WidgetToggle {
 
-    constructor()
+    constructor(value = false, tv = true, fv = false)
     {
-        super();
+        super(value, tv, fv);
         this.element.classList.remove("toggle");
         this.element.classList.add("checkbox");
     }
@@ -395,7 +411,7 @@ class WidgetDragable extends Widget
     /**
      * Constructor
      */
-    constructor (maxTouches = 1)
+    constructor (max_t = 2)
     {
         super();
 
@@ -413,7 +429,7 @@ class WidgetDragable extends Widget
         this.addEventListener("touchmove", this.#touch);
         this.addEventListener("touchcancel", this.#touch);
 
-        this.#max_t = 2;
+        this.#max_t = max_t;
     }
 
     /** @param {MouseEvent} event */
@@ -468,15 +484,6 @@ class WidgetDragable extends Widget
     }
 
     /**
-     * Set the maximum number of continuous touches to allow
-     * @param {number} t 
-     */
-    setMaxTouches(t)
-    {
-        this.#max_t = t;
-    }
-
-    /**
      * @param {TouchEvent} event 
      */
     #touch(event)
@@ -526,29 +533,18 @@ class WidgetSlider extends WidgetDragable
     /** @type {number} */
     #tmpNum = 0;
 
-    /** @type {number} */
-    #max;
-    /** @type {number} */
-    #min;
-    /** @type {number} */
-    #step;
-    /** @type {number} */
-    #precision;
-    /** @type {boolean} */
-    #percent;
-
 
     /**
      * Constructor
      * @param {number} [max] Value the slider represents at maximum
      * @param {number} [min] Value the slider represents at minimum
      * @param {number} [step] Step amount
-     * @param {number} [trunc] Decimal places to keep
+     * @param {number} [precision] Decimal places to keep
      * @param {boolean} [percent] Whether to show a percentage instead of the raw number
      */
-    constructor (max = 10, min = 1, step = 0.1, trunc = 1, percent = false)
+    constructor (max = 10, min = 1, value = 5, step = 0.1, precision = 1, percent = false)
     {
-        super();
+        super(1);
         this.element.classList.add("slider");
         let fill = document.createElement("div");
         fill.classList.add("fill");
@@ -558,15 +554,16 @@ class WidgetSlider extends WidgetDragable
         this.#detail.classList.add("detail");
         this.element.appendChild(this.#detail);
 
+        this.#u_detail = this.#update_detail.bind(this);
+
         this.addEventListener("change", this.#change);
 
-        this.#max = max;
-        this.#min = min;
-        this.#step = step;
-        this.#precision = trunc;
-        this.#percent = percent;
-
-        this.#u_detail = this.update_detail.bind(this);
+        super.setId("max", max);
+        super.setId("min", min);
+        super.setId("step", step);
+        super.setId("prec", precision);
+        super.setId("perc", percent);
+        this.set(value);
     }
 
     #common_move(x, y)
@@ -586,20 +583,21 @@ class WidgetSlider extends WidgetDragable
             point = top - y + bot;
         }
 
-        if (point < bot && this.#tmpNum != this.#min)
-            this.#tmpNum = this.#min;
-        else if (point > top && this.#tmpNum != this.#max)
-            this.#tmpNum = this.#max;
+        let min = this.get("min"), max = this.get("max"), step = this.get("step");
+        if (point < bot && this.#tmpNum != min)
+            this.#tmpNum = min;
+        else if (point > top && this.#tmpNum != max)
+            this.#tmpNum = max;
         else if (bot < point && point < top)
         {
-            let v = ((point - bot) / (top - bot)) * (this.#max - this.#min) + this.#min;
-            let r = v % this.#step;
-            v -= v % this.#step;
-            if (r >= this.#step / 2)
-                v += this.#step;
+            let v = ((point - bot) / (top - bot)) * (max - min) + min;
+            let r = v % step;
+            v -= v % step;
+            if (r >= step / 2)
+                v += step;
             this.#tmpNum = v;
         }
-        this.#update_ui();
+        this.update();
     }
 
     /** 
@@ -639,25 +637,27 @@ class WidgetSlider extends WidgetDragable
     #change ()
     {
         this.#tmpNum = this.get();
-        this.#update_ui();
+        this.update();
     }
 
-    #update_ui()
+    update()
     {
-        if (this.#tmpNum < this.#min || this.#max < this.#tmpNum)
-            this.#tmpNum = Math.min(Math.max(this.#tmpNum, this.#min), this.#max);
-        let percent = (this.#tmpNum - this.#min) / (this.#max - this.#min);
+        let min = this.get("min"), max = this.get("max"), perc = this.get("perc");
+        if (this.#tmpNum < min || max < this.#tmpNum)
+            this.#tmpNum = Math.min(Math.max(this.#tmpNum, min), max);
+        let percent = (this.#tmpNum - min) / (max - min);
 
-        this.#u_detail(this.#detail, this.#tmpNum, percent, this.#percent);
+        this.#u_detail(this.#detail, this.#tmpNum, percent, perc);
         this.element.style.setProperty("--percent", percent);
     }
 
-    update_detail(el, val, percent)
+    #update_detail(el, val, percent)
     {
-        if (this.#percent)
+        let perc = this.get("perc"), prec = this.get("prec");
+        if (perc)
             el.innerText = `${Math.trunc(percent * 100)}%`;
         else
-            el.innerText = `${Math.trunc(Math.pow(10, this.#precision) * val) / Math.pow(10, this.#precision)}`
+            el.innerText = `${Math.trunc(Math.pow(10, prec) * val) / Math.pow(10, prec)}`
     }
 
     setDetailUpdater(updater)
@@ -665,25 +665,13 @@ class WidgetSlider extends WidgetDragable
         this.#u_detail = updater;
     }
 
-    /** @param {number} m */
-    setMin(m)
+    setId(id, v, emit = false)
     {
-        this.#min = m;
-        this.#update_ui();
-    }
-
-    /** @param {number} m */
-    setMax(m)
-    {
-        this.#max = m;
-        this.#update_ui();
-    }
-
-    /** @param {number} s */
-    setStep(s)
-    {
-        this.#step = s;
-        this.#update_ui();
+        super.setId(id, v, emit);
+        if (id == "max" || id == "min" || id == "step")
+        {
+            this.update();
+        }
     }
 }
 
@@ -694,19 +682,18 @@ class WidgetSlider extends WidgetDragable
 class WidgetColorTemp extends WidgetSlider 
 {
     /** @type {Color} */
-    ORANGE = Color.from_rgb(250, 160, 100);
+    static ORANGE = Color.from_rgb(250, 160, 100);
     /** @type {Color} */
-    WHITE = new Color(1, 1, 1);
+    static WHITE = new Color(1, 1, 1);
     /** @type {Color} */
-    BLUE = Color.from_rgb(190, 200, 255);
+    static BLUE = Color.from_rgb(190, 200, 255);
 
     constructor ()
     {
-        super(6000, 2700, 100);
+        super(6000, 2700, 2700, 100);
         this.element.classList.replace("slider", "color-temp");
 
-        this.setDetailUpdater(this.update_detail.bind(this));
-        this.set(2700);
+        this.setDetailUpdater(this.#update_detail.bind(this));
     }
 
     /**
@@ -715,13 +702,13 @@ class WidgetColorTemp extends WidgetSlider
      * @param {number} val 
      * @param {number} percent 
      */
-    update_detail(el, val, percent)
+    #update_detail(el, val, percent)
     {
         let out = null;
-        if (percent < 0.7)
-            out = this.ORANGE.interpolate(this.WHITE, percent / 0.7);
+        if (percent < 0.85)
+            out = WidgetColorTemp.ORANGE.interpolate(WidgetColorTemp.WHITE, percent / 0.85);
         else
-            out = this.WHITE.interpolate(this.BLUE, (percent - 0.7) / 0.3);
+            out = WidgetColorTemp.WHITE.interpolate(WidgetColorTemp.BLUE, (percent - 0.85) / 0.15);
         this.element.style.setProperty("--detail", out.rgb());
     }
 }
@@ -739,11 +726,10 @@ class WidgetColorLight extends WidgetSlider
 
     constructor ()
     {
-        super(1, 0, 0.01, 0, 1);
+        super(1, 0, 1, 0.01);
         this.element.classList.replace("slider", "color-light");
 
-        this.setDetailUpdater(this.update_detail.bind(this));
-        this.set(0);
+        this.setDetailUpdater(this.#update_detail.bind(this));
     }
 
     /**
@@ -752,7 +738,7 @@ class WidgetColorLight extends WidgetSlider
      * @param {number} val 
      * @param {number} percent 
      */
-    update_detail(el, val, percent)
+    #update_detail(el, val, percent)
     {
         let out = this.BLACK.interpolate(this.WHITE, percent);
         this.element.style.setProperty("--detail", out.rgb());
@@ -774,17 +760,18 @@ class WidgetColorWheel extends WidgetDragable
 
     /**
      * Constructor
+     * @param {Color} color
      */
     constructor ()
     {
-        super();
+        super(1);
         this.element.classList.add("color-wheel");
 
         this.#detail = document.createElement("div");
         this.#detail.classList.add("detail");
         this.element.appendChild(this.#detail);
 
-        this.addEventListener("change", this.#change);
+        this.addEventListener("change", this.update);
     }
 
     #common_move(x, y)
@@ -810,7 +797,7 @@ class WidgetColorWheel extends WidgetDragable
 
         this.element.style.setProperty("--pos-x", tmpX);
         this.element.style.setProperty("--pos-y", tmpY);
-        this.update_detail(tmpX, tmpY, mag);
+        this.#update_detail(tmpX, tmpY, mag);
     }
 
     /** 
@@ -848,7 +835,7 @@ class WidgetColorWheel extends WidgetDragable
         this.#common_move(touches[0].clientX, touches[0].clientY);
     }
 
-    #change ()
+    update ()
     {
         this.#tmpColor = this.get();
 
@@ -860,7 +847,7 @@ class WidgetColorWheel extends WidgetDragable
         this.element.style.setProperty("--pos-y", Math.sin(a) * m);
     }
 
-    update_detail(x, y, mag)
+    #update_detail(x, y, mag)
     {
         if (x == 0)
         {
@@ -895,42 +882,26 @@ class WidgetThermostat extends Widget
     /** @type {HTMLElement} */
     #temp = null;
 
-    /** @type {number} */
-    #deviation = null;
-
-    /** @type {Color} */
-    #cold_color = null;
-
-    /** @type {Color} */
-    #temperate_color = null;
-
-    /** @type {Color} */
-    #hot_color = null;
-
-    /** @type {number} */
-    #cold_temp = null;
-
-    /** @type {number} */
-    #temp_hot = null;
-
     /**
      * Constructor
-     * @param {ThermSpec} therm Initial thermal information
+     * @param {number} temp Initial set point
+     * @param {number} gague Gague point
      * @param {number} [dev] The deviation of the arch (how far in degrees (temperature) from the middle to each end of the arc)
-     * @param {Color} [cold] The color the arch will display when in "cold" temperatures
-     * @param {Color} [temp] The color the arch will display when in "temperate" temperatures
-     * @param {Color} [hot] The color the arch will display when in "hot" temperatures
+     * @param {Color} [cold_col] The color the arch will display when in "cold" temperatures
+     * @param {Color} [temp_col] The color the arch will display when in "temperate" temperatures
+     * @param {Color} [warm_col] The color the arch will display when in "hot" temperatures
      * @param {number} [ct] The point at which we swap from cold to temperate
-     * @param {number} [th] The point at which we swap from temperate to hot
+     * @param {number} [tw] The point at which we swap from temperate to warm
      */
     constructor(
-        therm,
+        temp,
+        gague,
         dev = 7,
-        cold = Color.from_rgb(0, 133, 255),
-        temp = Color.from_rgb(18, 229, 82),
-        hot = Color.from_rgb(255, 149, 0),
+        cold_col = Color.from_rgb(0, 133, 255),
+        temp_col = Color.from_rgb(18, 229, 82),
+        warm_col = Color.from_rgb(255, 149, 0),
         ct = -2,
-        th = 2
+        tw = 2
     ) {
         super();
 
@@ -943,99 +914,52 @@ class WidgetThermostat extends Widget
         this.#gague = document.createElement("gague");
         this.element.appendChild(this.#gague);
 
-        this.addEventListener("change", this.#update_ui);
+        this.addEventListener("change", this.update);
 
-        this.#deviation = dev;
-        this.#cold_color = cold;
-        this.#temperate_color = temp;
-        this.#hot_color = hot;
-        this.#cold_temp = ct;
-        this.#temp_hot = th;
-        this.set(therm);
+        super.setId("deviation", dev);
+        super.setId("cold", cold_col);
+        super.setId("temp", temp_col);
+        super.setId("warm", warm_col);
+        super.setId("ct", ct);
+        super.setId("tw", tw);
+        super.setId("gague", gague);
+        this.set(temp);
     }
 
-    #update_ui()
+    update()
     {
         /** @type {ThermSpec} */
-        let therm = this.get();
-        this.#gague.innerText = `${Math.fround(therm.gague)}`;
-        this.#temp.innerText = `${Math.fround(therm.temp)}°`;
+        let temp = this.get(), gague = this.get("gague");
+        this.#gague.innerText = `${Math.fround(gague)}`;
+        this.#temp.innerText = `${Math.fround(temp)}°`;
 
         // Generate a percentage relative to the deviation
-        let div = (therm.gague - therm.temp) / this.#deviation;
+        let div = (gague - temp) / this.get("deviation");
         // Normalize into range of 0 - 1
         div = div / 2 + 0.5;
         div = Math.min(1, Math.max(div, 0));
         
         this.element.style.setProperty("--percent", div);
 
-        let color = this.#cold_color;
-        let r = therm.gague - therm.temp;
-        if (r >= this.#temp_hot)
-            color = this.#hot_color
-        else if (r >= this.#cold_temp)
-            color = this.#temperate_color;
+        /** @type {Color} */
+        let color = null;
+        let r = gague - temp;
+        if (r >= this.get("tw"))
+            color = this.get("warm");
+        else if (r >= this.get("ct"))
+            color = this.get("temp");
+        else
+            color = this.get("cold");
         this.element.style.setProperty("--detail", color.rgb());
     }
 
-    /**
-     * Set the number shown underneath the thermostat's arch
-     * @param {number} t 
-     */
-    setTemp(t)
+    setId(id, v, emit = false)
     {
-        let therm = this.get();
-        therm.temp = t;
-        this.set(therm);
-    }
-
-    /**
-     * Set the number shown underneath the thermostat's arch
-     * @param {number} t 
-     */
-    setGague(g)
-    {
-        let therm = this.get();
-        therm.gague = g;
-        this.set(therm);
-    }
-
-    /**
-     * Set both the number underneath the thermostat and
-     * the number in the gague over it.
-     * @param {number} t 
-     * @param {number} g 
-     */
-    setTherm(t, g)
-    {
-        this.set({temp: t, gague: g});
-    }
-
-    /**
-     * Colors which will display within the designated zones
-     * @param {Color} cold 
-     * @param {Color} temperate 
-     * @param {Color} hot 
-     */
-    setColors(cold, temperate, hot)
-    {
-        this.#cold_color = cold;
-        this.#temperate_color = temperate;
-        this.#hot_color = hot;
-        this.#update_ui();
-    }
-
-    /**
-     * Set the relative temperatures (in whatever degree units are being used)
-     * for when the color transitions happen on the arch
-     * @param {number} ct
-     * @param {number} th
-     */
-    setZoneStops(ct, th)
-    {
-        this.#cold_temp = ct;
-        this.#temp_hot = th;
-        this.#update_ui();
+        super.setId(id, v, emit);
+        if (id == "deviation" || id == "cold" || id == "temp" || id == "warm" || id == "ct" || id == "tw" || id == "gague")
+        {
+            this.update();
+        }
     }
 }
 
@@ -1156,8 +1080,8 @@ class WidgetSelectButton extends Widget
 
 	#selection_change(event)
 	{
-		let idx = Math.abs(event.detail.get()) - 1;
-		if (event.detail.get() < 0)
+		let idx = Math.abs(event.detail.widget.get()) - 1;
+		if (event.detail.widget.get() < 0)
 		{
 			this.#selection_remove(idx);
 		}
@@ -1178,8 +1102,8 @@ class WidgetSelectButton extends Widget
 	{
 		this.#swgs.push(new WidgetToggle());
 		let idx = this.#swgs.length;
-		this.#swgs[idx - 1].setTrueVal(idx);
-		this.#swgs[idx - 1].setFalseVal(-idx);
+		this.#swgs[idx - 1].setId("true", idx);
+		this.#swgs[idx - 1].setId("false", -idx);
 		this.element.appendChild(this.#swgs[idx - 1].element);
 		this.#swgs[idx - 1].element.innerHTML = inner;
 		this.#swgs[idx - 1].element.classList.remove("toggle");
@@ -1235,6 +1159,24 @@ class WidgetSelectButton extends Widget
 class WidgetScrubber extends WidgetDragable
 {
     constructor()
+    {
+        super(1);
+        
+        this.element.classList.add("scrubber");
+
+        let fill = document.createElement("div");
+        fill.classList.add("fill");
+        this.element.appendChild(fill);
+
+        this.element.style.setProperty("--percent", 0);
+    }
+
+    move(e)
+    {
+        console.log(e);
+    }
+
+    touch()
     {
         
     }
