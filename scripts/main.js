@@ -29,8 +29,10 @@ class Client {
 		this.sel_b.addOption("Cool", "cool");
 		this.sel_b.addOption("Eco", "eco");
 		content.appendChild(this.sel_b.element);
-        this.scrubber = new WidgetScrubber();
+        this.scrubber = new WidgetScrubber(72, 80, 60, 1, 3);
         content.appendChild(this.scrubber.element);
+
+        this.scrubber.addEventListener("change", this.changeThermostat.bind(this));
         // content.appendChild(Widget("button").el);
         // content.appendChild(Widget("checkbox").el);
         // content.appendChild(Widget("slider").el);
@@ -40,6 +42,12 @@ class Client {
         // content.appendChild(Widget("thermostat").el);
         // content.appendChild(Widget("sel-button").el);
         this.content = content;
+    }
+
+    /** @param {CustomEvent} e */
+    changeThermostat(e)
+    {
+        this.therm.set(e.detail.widget.get());
     }
 }
 
