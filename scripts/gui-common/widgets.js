@@ -78,6 +78,8 @@ class Widget extends EventTarget{
         this.#value[id] = v;
         if (emit)
             this.#emitChangeEvent();
+        else if (id == "value")
+            this.update();
     }
 
     /** @param {boolean} i */
@@ -244,6 +246,16 @@ class WidgetButton extends Widget
             this.#touching[i.identifier] = 1;
         }
     }
+
+    setId(id, v, emit = false)
+    {
+        if (id == "false" || id == "true")
+        {
+            if (this.get() == this.get(id))
+                super.setId("value", v);
+        }
+        super.setId(id, v, emit);
+    }
 }
 
 /**
@@ -358,10 +370,8 @@ class WidgetToggle extends Widget
         {
             if (this.get() == this.get(id))
                 super.setId("value", v);
-            super.setId(id, v, emit);
         }
-        else
-            super.setId(id, v, emit);
+        super.setId(id, v, emit);
     }
 }
 
@@ -1158,26 +1168,214 @@ class WidgetSelectButton extends Widget
  */
 class WidgetScrubber extends WidgetDragable
 {
-    constructor()
+    /** @type {HTMLElement} */
+    #detail = null;
+    /** @type {HTMLElement} */
+    #fill = null;
+
+    #binder = null;
+
+    /** @type {number} */
+    #tmpNum = 0;
+    #percent = 0;
+
+    /** @type {number} */
+    #interval = null;
+
+    /** @type {number} */
+    #zone = 0;
+
+    /**
+     * 
+     * @param {number} value Starting value
+     * @param {number} max Maximum value
+     * @param {number} min Minimum value
+     * @param {number} step Step increace/decrease per zone
+     * @param {number} zones Zones on either side of the zero-point
+     * @param {number} speed Speed per value change (ms)
+     */
+    constructor(value = 5, max = 10, min = 1, step = 0.5, zones = 3, speed = 350, spring = 1.5)
     {
         super(1);
         
         this.element.classList.add("scrubber");
 
-        let fill = document.createElement("div");
-        fill.classList.add("fill");
-        this.element.appendChild(fill);
+        this.#fill = document.createElement("div");
+        this.#fill.classList.add("fill");
+        this.element.appendChild(this.#fill);
+
+        this.#detail = document.createElement("div");
+        this.#detail.classList.add("detail");
+        this.element.appendChild(this.#detail);
 
         this.element.style.setProperty("--percent", 0);
+
+        super.setId("max", max);
+        super.setId("min", min);
+        super.setId("step", step);
+        super.setId("zones", zones);
+        super.setId("speed", speed);
+        super.setId("spring", spring);
+        super.setId("value", value);
+
+        this.#binder = this.#i_update.bind(this);
+        this.#detail.innerText = this.get();
     }
 
-    move(e)
+    #clear()
     {
-        console.log(e);
+        let a = this.#interval;
+        if (this.#interval != null)
+        {
+            this.#interval = null;
+            clearInterval(a);
+        }
     }
 
-    touch()
+    #common_move(x, y)
     {
+        let rect = this.element.getBoundingClientRect();
+        let point = 0, dist = 0;
+        if (this.element.classList.contains("h"))
+        {
+            dist = rect.width / 2;
+            point = x - (rect.left + dist);
+        }
+        else
+        {
+            dist = rect.height / 2;
+            point = (rect.top + dist) - y;
+        }
+
+        if (dist != 0)
+            this.#percent = point / dist;
+        else
+            this.#percent = 0;
+
+        this.update();
+    }
+
+    /** 
+     * @param {MouseEvent} event
+     * @param {number} btns
+     * @param {boolean} gone
+     */
+    move(event, btns, gone)
+    {
+        if (btns == 0)
+        {
+            if (event.type == "mouseup")
+            {
+                if (this.#interval != null)
+                    this.#clear();
+                this.#zone = 0;
+                this.set(this.#tmpNum);
+                this.element.style.setProperty("--percent", 0);
+            }
+                
+            return;
+        }
+        else if (event.type == "mousedown")
+        {
+            this.#tmpNum = this.get();
+        }
+
+        this.#common_move(event.clientX, event.clientY);
+    }
+    
+    /**
+     * @param {"touchstart" | "touchend" | "touchmove"} type 
+     * @param {Touch[]} touches 
+     */
+    touch(type, touches)
+    {
+        if (type == "touchend")
+        {
+            if (this.#interval != null)
+                this.#clear();
+            this.#zone = 0;
+            this.set(this.#tmpNum);
+            this.element.style.setProperty("--percent", 0);
+        }
+        else if (type == "touchstart")
+        {
+            this.#tmpNum = this.get();
+        }
+
+        if (touches.length < 1)
+            return;
+
+        this.#common_move(touches[0].clientX, touches[0].clientY);
+    }
+
+    #f_update()
+    {
+        let zones = this.get("zones");
+        if (this.#fill.children.length != zones * 2 + 1)
+        {
+            while (this.#fill.firstElementChild != null)
+                this.#fill.firstElementChild.remove();
+    
+            
+            for (let i = -zones; i <= zones; i++)
+            {
+                let z = document.createElement("div");
+                z.className = "zone";
+                z.style.setProperty("--zone", i);
+                this.#fill.appendChild(z);
+            }
+    
+            this.#fill.style.setProperty("--zones", zones);
+        }
         
+        for(let i = 0; i < this.#fill.children.length; i++)
+        {
+            if (i == zones + this.#zone)
+                this.#fill.children[i].classList.add("active");
+            else
+                this.#fill.children[i].classList.remove("active");
+        }
+    }
+
+    update()
+    {
+        let zones = this.get("zones"), spring = this.get("spring");
+        this.#f_update();
+
+        let percent = Math.min(Math.max(this.#percent / spring, -1), 1);
+        this.#zone = Math.round(percent * zones);
+
+        this.element.style.setProperty("--percent", percent);
+        if (this.#interval == null && this.#zone != 0)
+        {
+            this.#interval = setInterval(this.#binder, this.get("speed"));
+        }
+    }
+
+    #i_update()
+    {
+        if (this.#zone == 0 && this.#interval != null)
+            this.#clear();
+
+        let step = this.get("step"), max = this.get("max"), min = this.get("min");
+
+        this.#tmpNum = Math.max(Math.min(this.#tmpNum + this.#zone * step, max), min);
+
+        this.#detail.innerText = this.#tmpNum;
+    }
+
+    setId(id, v, emit = false)
+    {
+        super.setId(id, v, emit);
+        if (id == "max" || id == "min" || id == "step" || id == "zones" || id == "spring")
+        {
+            this.update();
+        }
+        else if (id == "speed" && this.#interval != null)
+        {
+            let a = this.#interval;
+            this.#interval = setInterval(this.#binder, v);
+            clearInterval(a);
+        }
     }
 }

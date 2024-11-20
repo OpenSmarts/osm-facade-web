@@ -190,7 +190,7 @@
     display: block;
     position: absolute;
 
-    left: calc(100% + 20px);
+    right: calc(100% + 20px);
     bottom: calc(-1 * var(--base-unit) / 2 + 100% * var(--percent));
 
     background-color: rgba(0, 132, 255, 0);
@@ -214,8 +214,8 @@
 }
 
 .slider.h > .detail, .color-light.h > .detail, .color-temp.h > .detail {
-    top: calc(100% + 20px);
-    left: calc(-1.2 * var(--base-unit) / 2 + 100% * var(--percent));
+    bottom: calc(100% + 20px);
+    right: calc(-1.2 * var(--base-unit) / 2 + 100% * (1 - var(--percent)));
 }
 
 .slider:active > .detail, .slider.touch > .detail {
@@ -599,16 +599,17 @@
 
 .scrubber {
     width: calc(var(--base-unit) + 5px);
-    height: calc(3 * var(--base-unit) + 5px);
+    height: calc(4 * var(--base-unit) + 5px);
     margin: 10px;
     box-shadow: inset 5px 5px var(--w-shadow);
     --w-bg-hover: var(--w-bg);
     --w-bg-active: var(--w-bg);
+    overflow: unset;
 }
 
 .scrubber.h {
     height: calc(var(--base-unit) + 5px);
-    width: calc(3 * var(--base-unit) + 5px);
+    width: calc(6 * var(--base-unit) + 5px);
 }
 
 .scrubber > .fill {
@@ -617,9 +618,11 @@
     height: 100%;
     left: 0;
     top: 0;
+    overflow: hidden;
+    border-radius: 10px;
 }
 
-.scrubber > .fill::before {
+.scrubber > .fill::after {
     content: '◈';
     display: block;
     height: calc(var(--base-unit) - 10px);
@@ -638,16 +641,86 @@
     transition-duration: 0.15s;
 }
 
-.scrubber.h > .fill::before {
+.scrubber.h > .fill::after {
     left: calc(50% - (var(--base-unit) - 10px) / 2 + (50% * var(--percent)));
     bottom: calc(50% - (var(--base-unit) - 10px) / 2);
 }
 
-.scrubber:hover > .fill::before, .scrubber.touch > .fill::before {
+.scrubber:hover > .fill::after, .scrubber.touch > .fill::after {
     background-color: var(--w-scr-nub-hover);
 }
 
-.scrubber:active > .fill::before, .scrubber.touch > .fill::before {
+.scrubber:active > .fill::after, .scrubber.touch > .fill::after {
     background-color: var(--w-scr-nub-active);
+    transition-duration: 0s;
+}
+
+.scrubber > .fill > .zone
+{
+    width: 100%;
+    height: calc(50% / var(--zones));
+    box-sizing: border-box;
+
+    background-color: var(--w-scr-back);
+
+    position:absolute;
+    bottom: calc(50% * (var(--zone) + var(--zones)) / var(--zones) - (25% / var(--zones)));
+    left: 0;
+    transition-duration: 0.15s;
+}
+
+.scrubber.h > .fill > .zone
+{
+    height: 100%;
+    width: calc(50% / var(--zones));
+    border-bottom: none;
+
+    left: calc(50% * (var(--zone) + var(--zones)) / var(--zones) - (25% / var(--zones)));
+    bottom: 0;
+}
+
+.scrubber > .fill > .zone:nth-child(2n) {
+    background-color: var(--w-scr-back-other);
+}
+
+.scrubber:active > .fill > .zone.active, .scrubber.touch > .fill > .zone.active {
+    background-color: var(--w-scr-back-active);
+}
+
+.scrubber > .detail {
+    display: block;
+    position: absolute;
+
+    right: calc(100% + 20px);
+    bottom: calc(50% - var(--base-unit) / 2);
+
+    background-color: rgba(0, 132, 255, 0);
+    color: rgba(255, 255, 255, 0);
+
+    border-radius: 10px;
+
+    z-index: 2;
+
+    font-weight: bold;
+    width: calc(1.2 * var(--base-unit));
+    height: var(--base-unit);
+    pointer-events: none;
+    user-select: none;
+
+    align-content: center;
+    text-align: center;
+    padding: 2px;
+
+    transition-duration: 0.15s;
+}
+
+.scrubber.h > .detail {
+    bottom: calc(100% + 20px);
+    right: calc(50% - 1.2 * var(--base-unit) / 2);
+}
+
+.scrubber:active > .detail, .scrubber.touch > .detail {
+    background-color: rgba(0, 132, 255, 1);
+    color: rgba(255, 255, 255, 1);
     transition-duration: 0s;
 }

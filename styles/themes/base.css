@@ -46,4 +46,7 @@
     --w-scr-nub: #eee;
     --w-scr-nub-hover: white;
     --w-scr-nub-active: white;
+    --w-scr-back: rgba(255, 255, 255, 0);
+    --w-scr-back-other: rgba(255, 255, 255, 0.3);
+    --w-scr-back-active: rgba(62, 162, 255, 0.5);
 }
