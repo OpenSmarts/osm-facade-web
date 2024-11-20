@@ -1,53 +1,35 @@
 class Client {
 
-    
-
     /**
      * @param {HTMLElement} content The base element where page content is placed
      */
     constructor (content)
     {
-        /** @type {WidgetToggle} */
-        this.cb = new WidgetCheckbox();
-        content.appendChild(this.cb.element);
-        this.toggle = new WidgetToggle();
-        content.appendChild(this.toggle.element);
-        this.button = new WidgetButton();
-        content.appendChild(this.button.element);
-        this.slider = new WidgetSlider();
-        content.appendChild(this.slider.element);
-        this.temp = new WidgetColorTemp();
-        content.appendChild(this.temp.element);
-        this.light = new WidgetColorLight();
-        content.appendChild(this.light.element);
-        this.wheel = new WidgetColorWheel();
-        content.appendChild(this.wheel.element);
-        this.therm = new WidgetThermostat(72, 69);
-        content.appendChild(this.therm.element);
-		this.sel_b = new WidgetSelectButton(2);
-		this.sel_b.addOption("Heat", "heat");
-		this.sel_b.addOption("Cool", "cool");
-		this.sel_b.addOption("Eco", "eco");
-		content.appendChild(this.sel_b.element);
-        this.scrubber = new WidgetScrubber(72, 80, 60, 1, 3);
-        content.appendChild(this.scrubber.element);
+        /** @type {DescAny[]} */
+        let desc = [
+            { type: "button", name: "bt", props: {}, },
+            { type: "checkbox", name: "cb", props: {}, state: true },
+            { type: "toggle", name: "tg", props: {}, state: false },
+            { type: "slider", name: "sli", props: {max: 10, min: 1}, state: 6 },
+            { type: "color-light", name: "cli", state: 0.7 },
+            { type: "color-temp", name: "ctp", state: 3000 },
+            { type: "color-wheel", name: "cwh", state: Color.from_rgb(255, 200, 200) },
+            { type: "thermostat", name: "thm", props: {gague: 69}, state: 72 },
+            { type: "scrubber", name: "scb", props: {min: 60, max: 80, step: 1}, state: 72 }
+        ];
 
-        this.scrubber.addEventListener("change", this.changeThermostat.bind(this));
-        // content.appendChild(Widget("button").el);
-        // content.appendChild(Widget("checkbox").el);
-        // content.appendChild(Widget("slider").el);
-        // content.appendChild(Widget("color-wheel").el);
-        // content.appendChild(Widget("color-temp").el);
-        // content.appendChild(Widget("color-light").el);
-        // content.appendChild(Widget("thermostat").el);
-        // content.appendChild(Widget("sel-button").el);
+        this.set = new WidgetSet(desc, "set");
+        this.set.apply_to(content);
+
+        this.set.addEventListener("change", this.changeSet.bind(this));
         this.content = content;
     }
 
     /** @param {CustomEvent} e */
-    changeThermostat(e)
+    changeSet(e)
     {
-        this.therm.set(e.detail.widget.get());
+        if (e.detail.name == "scb" && e.detail.changed == "value")
+            this.set.widgets["thm"].set(e.detail.value);
     }
 }
 

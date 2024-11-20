@@ -10,7 +10,6 @@
     window.addEventListener("scrollend", unscroll);
 })();
 
-
 /**
  * The base Widget class.  Represents an interactible
  * value-producing object in the browser, like an input.
@@ -65,7 +64,7 @@ class Widget extends EventTarget{
     set(v)
     {
         this.#value["value"] = v;
-        this.#emitChangeEvent();
+        this.#emitChangeEvent("value");
     }
 
     /**
@@ -77,7 +76,7 @@ class Widget extends EventTarget{
     {
         this.#value[id] = v;
         if (emit)
-            this.#emitChangeEvent();
+            this.#emitChangeEvent(id);
         else if (id == "value")
             this.update();
     }
@@ -552,7 +551,7 @@ class WidgetSlider extends WidgetDragable
      * @param {number} [precision] Decimal places to keep
      * @param {boolean} [percent] Whether to show a percentage instead of the raw number
      */
-    constructor (max = 10, min = 1, value = 5, step = 0.1, precision = 1, percent = false)
+    constructor (value = 5, min = 1, max = 10, step = 0.1, precision = 1, percent = false)
     {
         super(1);
         this.element.classList.add("slider");
@@ -698,9 +697,9 @@ class WidgetColorTemp extends WidgetSlider
     /** @type {Color} */
     static BLUE = Color.from_rgb(190, 200, 255);
 
-    constructor ()
+    constructor (value = 2700)
     {
-        super(6000, 2700, 2700, 100);
+        super(value, 2700, 6000, 100);
         this.element.classList.replace("slider", "color-temp");
 
         this.setDetailUpdater(this.#update_detail.bind(this));
@@ -734,9 +733,9 @@ class WidgetColorLight extends WidgetSlider
     /** @type {Color} */
     BLACK = new Color(0, 0, 0);
 
-    constructor ()
+    constructor (value = 1)
     {
-        super(1, 0, 1, 0.01);
+        super(value, 0, 1, 0.01);
         this.element.classList.replace("slider", "color-light");
 
         this.setDetailUpdater(this.#update_detail.bind(this));
@@ -772,7 +771,7 @@ class WidgetColorWheel extends WidgetDragable
      * Constructor
      * @param {Color} color
      */
-    constructor ()
+    constructor (value = Color.from_rgb(255, 255, 255))
     {
         super(1);
         this.element.classList.add("color-wheel");
@@ -782,6 +781,7 @@ class WidgetColorWheel extends WidgetDragable
         this.element.appendChild(this.#detail);
 
         this.addEventListener("change", this.update);
+        this.set(value);
     }
 
     #common_move(x, y)
@@ -894,8 +894,8 @@ class WidgetThermostat extends Widget
 
     /**
      * Constructor
-     * @param {number} temp Initial set point
-     * @param {number} gague Gague point
+     * @param {number} value Current set point
+     * @param {number} gague Current temperature being read from sensor(s)
      * @param {number} [dev] The deviation of the arch (how far in degrees (temperature) from the middle to each end of the arc)
      * @param {Color} [cold_col] The color the arch will display when in "cold" temperatures
      * @param {Color} [temp_col] The color the arch will display when in "temperate" temperatures
@@ -904,7 +904,7 @@ class WidgetThermostat extends Widget
      * @param {number} [tw] The point at which we swap from temperate to warm
      */
     constructor(
-        temp,
+        value,
         gague,
         dev = 7,
         cold_col = Color.from_rgb(0, 133, 255),
@@ -933,7 +933,7 @@ class WidgetThermostat extends Widget
         super.setId("ct", ct);
         super.setId("tw", tw);
         super.setId("gague", gague);
-        this.set(temp);
+        this.set(value);
     }
 
     update()
@@ -1194,7 +1194,7 @@ class WidgetScrubber extends WidgetDragable
      * @param {number} zones Zones on either side of the zero-point
      * @param {number} speed Speed per value change (ms)
      */
-    constructor(value = 5, max = 10, min = 1, step = 0.5, zones = 3, speed = 350, spring = 1.5)
+    constructor(value = 5, max = 10, min = 1, step = 0.5, zones = 2, speed = 350, spring = 1.5)
     {
         super(1);
         
