@@ -954,7 +954,7 @@ class WidgetThermostat extends Widget
         /** @type {Color} */
         let color = null;
         let r = gague - temp;
-        if (r >= this.get("tw"))
+        if (r > this.get("tw"))
             color = this.get("warm");
         else if (r >= this.get("ct"))
             color = this.get("temp");
