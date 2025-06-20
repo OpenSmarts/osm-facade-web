@@ -23,6 +23,7 @@ class Widget extends EventTarget{
         super();
         this.element = document.createElement("div");
         this.element.classList.add("widget");
+        this.element.classList.add("gridlock");
 
         this.element.addEventListener("mousedown", this.#emitMouseEvent.bind(this));
         this.element.addEventListener("mouseup", this.#emitMouseEvent.bind(this));
