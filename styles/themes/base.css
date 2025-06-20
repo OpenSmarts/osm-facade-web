@@ -15,9 +15,9 @@
     --w-tg-inactive-bg-hover: #3ea2ff;
     --w-tg-inactive-bg-active: #3ea2ff;
     --w-tg-active-color: rgb(255, 128, 0);
-    --w-tg-active-bg: #dd3;
-    --w-tg-active-bg-hover: #ee7;
-    --w-tg-active-bg-active: #ee7;
+    --w-tg-active-bg: #fff134;
+    --w-tg-active-bg-hover: #fff674;
+    --w-tg-active-bg-active: #fff674;
 
     /* Slider colors */
     --w-sl-fill: #0084ff;
@@ -49,4 +49,12 @@
     --w-scr-back: rgba(255, 255, 255, 0);
     --w-scr-back-other: rgba(255, 255, 255, 0.3);
     --w-scr-back-active: rgba(62, 162, 255, 0.5);
+
+    /* Radio */
+    --w-radio-inactive: #ccc;
+    --w-radio-inactive-hover: #eee;
+    --w-radio-inactive-active: #eee;
+    --w-radio-active: #0084ff;
+    --w-radio-active-hover: #2696ff;
+    --w-radio-active-active: #3ea2ff;
 }

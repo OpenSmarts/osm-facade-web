@@ -15,7 +15,9 @@ class Client {
             { type: "color-temp", name: "ctp", state: 3000 },
             { type: "color-wheel", name: "cwh", state: Color.from_rgb(255, 200, 200) },
             { type: "thermostat", name: "thm", props: {gague: 69}, state: 72 },
-            { type: "scrubber", name: "scb", props: {min: 60, max: 80, step: 1}, state: 72 }
+            { type: "multi-select", name: "msl", props: {max: 2, values: ["aeiou", "sometimes y"], labels: ["vowels", "extra vowels"]}, state: []},
+            { type: "scrubber", name: "scb", props: {min: 60, max: 80, step: 1}, state: 72 },
+            { type: "radio", name: "rad", props: {values: ["a", "b"], labels: ["a", "b"]}, state: null}
         ];
 
         this.set = new WidgetSet(desc, "set");
@@ -33,6 +35,7 @@ class Client {
     }
 }
 
+let OSmClient = null;
 let contents = document.getElementsByTagName("content");
 if (contents.length > 0)
     OSmClient = new Client(contents[0]);

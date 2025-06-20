@@ -1,3 +1,5 @@
+'use strict';
+
 class Color
 {
     /** @type {Array<number>} */
@@ -227,6 +229,8 @@ const BLUE = new Color(0, 0, 1, 1);
 const MAGENTA = new Color(1, 0, 1, 1);
 const WHITE = new Color(1, 1, 1, 1);
 const BLACK = new Color(0, 0, 0, 1);
+const TRANSPARENT_WHITE = new Color(1,1,1,0);
+const TRANSPARENT_BLACK = new Color(0,0,0,0);
 
 const PI_THIRDS = Math.PI / 3;
 const TWO_PI = Math.PI * 2;

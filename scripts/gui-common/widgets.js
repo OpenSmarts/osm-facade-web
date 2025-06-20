@@ -1,14 +1,4 @@
-( function () {
-    window.SCROLLING = false;
-    function scroll(event) {
-        window.SCROLLING = true;
-    }
-    function unscroll(event) {
-        window.SCROLLING = false;
-    }
-    window.addEventListener("scroll", scroll);
-    window.addEventListener("scrollend", unscroll);
-})();
+'use strict';
 
 /**
  * The base Widget class.  Represents an interactible
@@ -72,7 +62,7 @@ class Widget extends EventTarget{
      * @param {*} v
      * @param {boolean} [emit]
      */
-    setId(id, v, emit = false)
+    set_by_id(id, v, emit = false)
     {
         this.#value[id] = v;
         if (emit)
@@ -166,8 +156,8 @@ class WidgetButton extends Widget
         this.addEventListener("touchstart", this.#touchstart);
         this.addEventListener("touchend", this.#touchend);
         this.#bound = this.#unpress.bind(this);
-        this.setId("true", tv);
-        this.setId("false", fv);
+        this.set_by_id("true", tv);
+        this.set_by_id("false", fv);
         this.set(fv);
     }
 
@@ -246,14 +236,14 @@ class WidgetButton extends Widget
         }
     }
 
-    setId(id, v, emit = false)
+    set_by_id(id, v, emit = false)
     {
         if (id == "false" || id == "true")
         {
-            if (this.get() == this.get(id))
-                super.setId("value", v);
+            if (this.get() === this.get(id))
+                super.set_by_id("value", v);
         }
-        super.setId(id, v, emit);
+        super.set_by_id(id, v, emit);
     }
 }
 
@@ -284,8 +274,8 @@ class WidgetToggle extends Widget
         this.addEventListener("change", this.update);
         this.addEventListener("touchend", this.#touchend);
         this.#bound = this.#toggle.bind(this);
-        super.setId("false", fv);
-        super.setId("true", tv);
+        super.set_by_id("false", fv);
+        super.set_by_id("true", tv);
         this.set(value);
     }
 
@@ -307,7 +297,7 @@ class WidgetToggle extends Widget
         if (((1 << event.button) & this.#primed) == 0)
             return;
 
-		if (this.get() == this.get("true"))
+		if (this.get() === this.get("true"))
         	this.set(this.get("false"));
 		else
 			this.set(this.get("true"));
@@ -318,7 +308,7 @@ class WidgetToggle extends Widget
 
 	update()
 	{
-        this.element.classList.toggle("active", this.get() == this.get("true"));
+        this.element.classList.toggle("active", this.get() === this.get("true"));
 	}
 
     /** @param {MouseEvent} event */
@@ -354,7 +344,7 @@ class WidgetToggle extends Widget
                 i.clientY > rect.top &&
                 i.clientY < rect.bottom
             ) {
-                if (this.get() == this.get("true"))
+                if (this.get() === this.get("true"))
                     this.set(this.get("false"));
                 else
                     this.set(this.get("true"));
@@ -363,14 +353,19 @@ class WidgetToggle extends Widget
         }
     }
 
-    setId(id, v, emit = false)
+    /**
+     * @param {string} id
+     * @param {*} v
+     * @param {boolean} [emit]
+     */
+    set_by_id(id, v, emit = false)
     {
         if (id == "false" || id == "true")
         {
-            if (this.get() == this.get(id))
-                super.setId("value", v);
+            if (this.get() === this.get(id))
+                super.set_by_id("value", v);
         }
-        super.setId(id, v, emit);
+        super.set_by_id(id, v, emit);
     }
 }
 
@@ -567,11 +562,11 @@ class WidgetSlider extends WidgetDragable
 
         this.addEventListener("change", this.#change);
 
-        super.setId("max", max);
-        super.setId("min", min);
-        super.setId("step", step);
-        super.setId("prec", precision);
-        super.setId("perc", percent);
+        super.set_by_id("max", max);
+        super.set_by_id("min", min);
+        super.set_by_id("step", step);
+        super.set_by_id("prec", precision);
+        super.set_by_id("perc", percent);
         this.set(value);
     }
 
@@ -651,12 +646,12 @@ class WidgetSlider extends WidgetDragable
 
     update()
     {
-        let min = this.get("min"), max = this.get("max"), perc = this.get("perc");
+        let min = this.get("min"), max = this.get("max");
         if (this.#tmpNum < min || max < this.#tmpNum)
             this.#tmpNum = Math.min(Math.max(this.#tmpNum, min), max);
         let percent = (this.#tmpNum - min) / (max - min);
 
-        this.#u_detail(this.#detail, this.#tmpNum, percent, perc);
+        this.#u_detail(this.#detail, this.#tmpNum, percent);
         this.element.style.setProperty("--percent", percent);
     }
 
@@ -674,9 +669,14 @@ class WidgetSlider extends WidgetDragable
         this.#u_detail = updater;
     }
 
-    setId(id, v, emit = false)
+    /**
+     * @param {string} id
+     * @param {*} v
+     * @param {boolean} [emit]
+     */
+    set_by_id(id, v, emit = false)
     {
-        super.setId(id, v, emit);
+        super.set_by_id(id, v, emit);
         if (id == "max" || id == "min" || id == "step")
         {
             this.update();
@@ -729,9 +729,9 @@ class WidgetColorTemp extends WidgetSlider
 class WidgetColorLight extends WidgetSlider 
 {
     /** @type {Color} */
-    WHITE = new Color(1, 1, 1);
+    static WHITE = new Color(1, 1, 1);
     /** @type {Color} */
-    BLACK = new Color(0, 0, 0);
+    static BLACK = new Color(0, 0, 0);
 
     constructor (value = 1)
     {
@@ -749,7 +749,7 @@ class WidgetColorLight extends WidgetSlider
      */
     #update_detail(el, val, percent)
     {
-        let out = this.BLACK.interpolate(this.WHITE, percent);
+        let out = WidgetColorLight.BLACK.interpolate(WidgetColorLight.WHITE, percent);
         this.element.style.setProperty("--detail", out.rgb());
     }
 }
@@ -926,13 +926,13 @@ class WidgetThermostat extends Widget
 
         this.addEventListener("change", this.update);
 
-        super.setId("deviation", dev);
-        super.setId("cold", cold_col);
-        super.setId("temp", temp_col);
-        super.setId("warm", warm_col);
-        super.setId("ct", ct);
-        super.setId("tw", tw);
-        super.setId("gague", gague);
+        super.set_by_id("deviation", dev);
+        super.set_by_id("cold", cold_col);
+        super.set_by_id("temp", temp_col);
+        super.set_by_id("warm", warm_col);
+        super.set_by_id("ct", ct);
+        super.set_by_id("tw", tw);
+        super.set_by_id("gague", gague);
         this.set(value);
     }
 
@@ -963,9 +963,14 @@ class WidgetThermostat extends Widget
         this.element.style.setProperty("--detail", color.rgb());
     }
 
-    setId(id, v, emit = false)
+    /**
+     * @param {string} id
+     * @param {*} v
+     * @param {boolean} [emit]
+     */
+    set_by_id(id, v, emit = false)
     {
-        super.setId(id, v, emit);
+        super.set_by_id(id, v, emit);
         if (id == "deviation" || id == "cold" || id == "temp" || id == "warm" || id == "ct" || id == "tw" || id == "gague")
         {
             this.update();
@@ -1035,9 +1040,10 @@ class WidgetSelectButton extends Widget
 		{
 			if(this.#selected.length > 0)
 			{
+                /** @type {number} */
 				let swap = this.#selected.shift();
                 this.#swgs[swap].removeEventListener("change", this.#binder);
-			    this.#swgs[swap].set(-swap - 1);
+			    this.#swgs[swap].set_by_id("value", -swap - 1, false);
                 this.#swgs[swap].addEventListener("change", this.#binder);
 			}
 			this.#selected.push(idx);
@@ -1045,7 +1051,7 @@ class WidgetSelectButton extends Widget
 		else
 		{
             this.#swgs[idx].removeEventListener("change", this.#binder);
-			this.#swgs[idx].set(-idx - 1);
+            this.#swgs[idx].set_by_id("value", -swap - 1, false);
             this.#swgs[idx].addEventListener("change", this.#binder);
 		}
 		
@@ -1108,21 +1114,21 @@ class WidgetSelectButton extends Widget
 	 * @param {*} val Value emitted when this value is selected
 	 * @returns {number} The index of the new option
 	 */
-	addOption(inner, val)
+	add_option(inner, val)
 	{
 		this.#swgs.push(new WidgetToggle());
 		let idx = this.#swgs.length;
-		this.#swgs[idx - 1].setId("true", idx);
-		this.#swgs[idx - 1].setId("false", -idx);
+		this.#swgs[idx - 1].set_by_id("true", idx);
+		this.#swgs[idx - 1].set_by_id("false", -idx);
 		this.element.appendChild(this.#swgs[idx - 1].element);
 		this.#swgs[idx - 1].element.innerHTML = inner;
 		this.#swgs[idx - 1].element.classList.remove("toggle");
 		this.#swgs[idx - 1].addEventListener("change", this.#binder);
 		this.#svls.push(val);
-        return idx;
+        return idx - 1;
 	}
 
-	delOption(index)
+	delete_option(index)
 	{
 		this.#swgs[index].element.remove();
 		this.#swgs[index].removeEventListener("change", this.#binder);
@@ -1144,7 +1150,7 @@ class WidgetSelectButton extends Widget
 			}
 		}
 
-		if (needs_update)
+		if (need_update)
 		{
             if (!this.#removeLastOver && this.#selected.length == this.#maxSelections - 1)
             {
@@ -1161,6 +1167,25 @@ class WidgetSelectButton extends Widget
 	{
 		return this.#svls.indexOf(val);
 	}
+
+    /**
+     * 
+     * @param {Array<number>} indices 
+     */
+    set_indices(indices)
+    {
+        for(let i of this.#selected) {
+            this.#swgs[i].set(-i - 1);
+        }
+
+        for(let i of indices) {
+            this.#swgs.set(i + 1);
+        }
+
+        this.#selected = indices;
+
+        this.#update_val();
+    }
 }
 
 /**
@@ -1210,13 +1235,13 @@ class WidgetScrubber extends WidgetDragable
 
         this.element.style.setProperty("--percent", 0);
 
-        super.setId("max", max);
-        super.setId("min", min);
-        super.setId("step", step);
-        super.setId("zones", zones);
-        super.setId("speed", speed);
-        super.setId("spring", spring);
-        super.setId("value", value);
+        super.set_by_id("max", max);
+        super.set_by_id("min", min);
+        super.set_by_id("step", step);
+        super.set_by_id("zones", zones);
+        super.set_by_id("speed", speed);
+        super.set_by_id("spring", spring);
+        super.set_by_id("value", value);
 
         this.#binder = this.#i_update.bind(this);
         this.#detail.innerText = this.get();
@@ -1364,9 +1389,14 @@ class WidgetScrubber extends WidgetDragable
         this.#detail.innerText = this.#tmpNum;
     }
 
-    setId(id, v, emit = false)
+    /**
+     * @param {string} id
+     * @param {*} v
+     * @param {boolean} [emit]
+     */
+    set_by_id(id, v, emit = false)
     {
-        super.setId(id, v, emit);
+        super.set_by_id(id, v, emit);
         if (id == "max" || id == "min" || id == "step" || id == "zones" || id == "spring")
         {
             this.update();
@@ -1377,5 +1407,216 @@ class WidgetScrubber extends WidgetDragable
             this.#interval = setInterval(this.#binder, v);
             clearInterval(a);
         }
+    }
+}
+
+/**
+ * A toggle widget, similar to a WidgetCheckbox, but meant
+ * to be used for on/off power states.
+ * @extends Widget<*>
+ */
+class WidgetRadio extends Widget {
+    /** @type {number} */
+    #primed = 0;
+
+    /** @type {number} */
+    #gone = 0;
+
+    #bound = null;
+
+    constructor (value = false, tv = true, fv = false)
+    {
+        super();
+        this.element.classList.add("button");
+        this.element.classList.add("radio");
+        this.addEventListener("mousedown", this.#prime);
+        this.addEventListener("mouseup", this.#toggle);
+        this.addEventListener("mouseleave", this.#leave);
+        this.addEventListener("mouseenter", this.#enter);
+        this.addEventListener("change", this.update);
+        this.addEventListener("touchend", this.#touchend);
+        this.#bound = this.#toggle.bind(this);
+        super.set_by_id("false", fv);
+        super.set_by_id("true", tv);
+        this.set(value);
+    }
+
+    /** @param {MouseEvent} event */
+    #prime(event)
+    {
+        this.#primed |= (1 << event.button);
+    }
+
+    /** @param {MouseEvent} event */
+    #toggle(event)
+    {
+        if (this.#gone)
+        {
+            this.#primed = 0;
+            this.#gone = 0;
+            window.removeEventListener("mouseup", this.#bound);
+        }
+        if (((1 << event.button) & this.#primed) == 0)
+            return;
+
+		this.set(this.get("true"));
+		
+		this.update();
+        this.#primed -= (1 << event.button);
+    }
+
+	update()
+	{
+        this.element.classList.toggle("active", this.get() === this.get("true"));
+	}
+
+    /** @param {MouseEvent} event */
+    #leave(event)
+    {
+        if (this.#primed == 0)
+            return;
+        this.#gone = 1;
+        window.addEventListener("mouseup", this.#bound);
+    }
+
+    /** @param {MouseEvent} event */
+    #enter(event)
+    {
+        if (this.#primed == 0)
+            return;
+        this.#gone = 0;
+        window.removeEventListener("mouseup", this.#bound);
+    }
+
+    /** @param {TouchEvent} event */
+    #touchend(event)
+    {
+        if (event.changedTouches.length < 1)
+            return;
+
+        let rect = this.element.getBoundingClientRect();
+
+        for (let i of event.changedTouches)
+        {
+            if (i.clientX < rect.right &&
+                i.clientX > rect.left &&
+                i.clientY > rect.top &&
+                i.clientY < rect.bottom
+            ) {
+                this.set(this.get("true"));
+                return;
+            }
+        }
+    }
+
+    /**
+     * @param {string} id
+     * @param {*} v
+     * @param {boolean} [emit]
+     */
+    set_by_id(id, v, emit = false)
+    {
+        if (id == "false" || id == "true")
+        {
+            if (this.get() === this.get(id))
+                super.set_by_id("value", v);
+        }
+        super.set_by_id(id, v, emit);
+    }
+}
+
+class WidgetRadioGroup extends Widget {
+    /** @type {Array<WidgetRadio>} */
+    #radios = [];
+
+	/** @type {Array<any>} */
+	#vals = [];
+
+	/** @type {number} */
+	#selected = null;
+	
+	/** @type {(e: CustomEvent) => void} */
+	#binder = null;
+
+	/**
+	 * Constructor
+	 */
+	constructor()
+	{
+		super();
+		this.element.classList.add("radio-group");
+
+		this.#binder = this.#select.bind(this);
+	}
+
+	#select(event)
+	{
+        let idx = event.detail.widget.get();
+        if (idx == this.#selected)
+            return;
+
+        if (this.#selected !== null)
+            this.#radios[this.#selected].set_by_id("value", false, false);
+        this.#selected = idx;
+        this.set(this.#vals[idx]);
+	}
+	
+	/**
+	 * Add a new selection with the given
+	 * innerHTML and value when selected
+	 * @param {string} label Inner HTML of the radio's label
+	 * @param {*} val Value emitted when this value is selected
+	 * @returns {number} The index of the new option
+	 */
+	add_option(labelInner, val)
+	{
+        // setup radio and value
+        let idx = this.#radios.length;
+		this.#radios.push(new WidgetRadio());
+		this.#radios[idx].set_by_id("true", idx);
+        this.#radios[idx].addEventListener("change", this.#binder);
+		this.#vals.push(val);
+
+        // setup label and radio container
+        let label = document.createElement("div");
+        label.className = "radio-label";
+        label.innerHTML = labelInner;
+
+        let el = document.createElement("div");
+        el.className = "radio-option";
+        el.appendChild(this.#radios[idx].element);
+        el.appendChild(label);
+		
+        // Append the option
+        this.element.appendChild(el);
+
+        return idx;
+	}
+
+	delete_option(index)
+	{
+		this.#radios[index].element.remove();
+		this.#radios[index].removeEventListener("change", this.#binder);
+		this.#radios.splice(index, 1);
+		this.#vals.splice(index, 1);
+
+		if (this.#selected == index) {
+            this.set(null);
+        }
+	}
+
+	indexOf(val)
+	{
+		return this.#vals.indexOf(val);
+	}
+
+    set_by_index(idx) {
+        if (idx == this.#selected)
+            return;
+        if (this.#selected !== null)
+            this.#radios[this.#selected].set_by_id("value", false, false);
+        this.#radios[idx].set_by_id("value", idx, false);
+        this.#selected = idx;
+        this.set(this.#vals[idx]);
     }
 }

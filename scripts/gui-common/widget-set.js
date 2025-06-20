@@ -1,9 +1,13 @@
+'use strict';
+
 /**
  * JSDoc types
  */
 
 /**
- * @typedef {"button" | "toggle" | "checkbox" | "slider" | "color-temp" | "color-light" | "color-wheel" | "thermostat" | "scrubber"} DescType
+ * @typedef {"button" | "toggle" | "checkbox" | "radio" |
+ * "slider" | "color-temp" | "color-light" |
+ * "color-wheel" | "thermostat" | "multi-select" | "scrubber"} DescType
  */
 
 /**
@@ -41,6 +45,14 @@
  */
 
 /**
+ * @typedef OSmMultiSelectProps
+ * @property {Array<srting>} labels
+ * @property {Array<any>} values
+ * @property {number} max
+ * @property {boolean} remove
+ */
+
+/**
  * @typedef OSmScrubberProps
  * @property {number} max
  * @property {number} min
@@ -51,7 +63,13 @@
  */
 
 /**
- * @typedef {OSmButtonProps | OSmToggleProps | OSmSliderProps | OSmThermostatProps | OSmScrubberProps} OSmAnyProps
+ * @typedef OSmRadioSelectProps
+ * @property {Array<any>} values
+ * @property {Array<string>} labels
+ */
+
+/**
+ * @typedef {OSmButtonProps | OSmToggleProps | OSmSliderProps | OSmThermostatProps | OSmMultiSelectProps | OSmScrubberProps | OSmRadioSelectProps} OSmAnyProps
  */
 
 /**
@@ -89,11 +107,19 @@
  */
 
 /**
+ * @typedef {DescBase & {type: "multi-select", props: OSmMultiSelectProps, state: Array<number>}} DescMultiSelect
+ */
+
+/**
  * @typedef {DescBase & {type: "scrubber", props: OSmScrubberProps, state: number}} DescScrubber
  */
 
 /**
- * @typedef {DescButton | DescToggle | DescSlider | DescColorTemp | DescColorLight | DescColorWheel | DescThermostat | DescScrubber} DescAny
+ * @typedef {DescBase & {type: "radio", props: OSmRadioSelectProps, state: number | null}} DescRadioSelect
+ */
+
+/**
+ * @typedef {DescButton | DescToggle | DescSlider | DescColorTemp | DescColorLight | DescColorWheel | DescThermostat | DescMultiSelect | DescScrubber | DescRadioSelect} DescAny
  */
 
 class WidgetSet extends EventTarget{
@@ -130,7 +156,7 @@ class WidgetSet extends EventTarget{
     {
         let merge = {...{tv: true, fv: false, text: ""}, ...desc.props};
         let out = new WidgetButton(merge.tv, merge.fv);
-        out.setId("name", desc.name);
+        out.set_by_id("name", desc.name);
         out.element.innerText = merge.text;
         return out;
     }
@@ -151,7 +177,7 @@ class WidgetSet extends EventTarget{
             out = new WidgetToggle(desc.state ? merge.tv : merge.fv, merge.tv, merge.fv);
             out.element.innerText = merge.text;
         }
-        out.setId("name", desc.name);
+        out.set_by_id("name", desc.name);
             
         return out;
     }
@@ -164,7 +190,7 @@ class WidgetSet extends EventTarget{
     {
         let merge = {...{step: 0.1, precision: 1, percent: false}, ...desc.props};
         let out = new WidgetSlider(desc.state, merge.min, merge.max, merge.step, merge.precision, merge.percent);
-        out.setId("name", desc.name);
+        out.set_by_id("name", desc.name);
         return out;
     }
 
@@ -175,7 +201,7 @@ class WidgetSet extends EventTarget{
     static parse_color_light(desc)
     {
         let out = new WidgetColorLight(Math.max(Math.min(desc.state, 1), 0));
-        out.setId("name", desc.name);
+        out.set_by_id("name", desc.name);
         return out;
     }
 
@@ -186,7 +212,7 @@ class WidgetSet extends EventTarget{
     static parse_color_temp(desc)
     {
         let out = new WidgetColorTemp(Math.max(Math.min(desc.state, 6000), 2700));
-        out.setId("name", desc.name);
+        out.set_by_id("name", desc.name);
         return out;
     }
 
@@ -198,7 +224,7 @@ class WidgetSet extends EventTarget{
     {
         let value = new Color(...desc.state.channels);
         let out = new WidgetColorWheel(value);
-        out.setId("name", desc.name);
+        out.set_by_id("name", desc.name);
         return out;
     }
 
@@ -222,7 +248,26 @@ class WidgetSet extends EventTarget{
         let cw = new Color(...merge.color_warm.channels);
 
         let out = new WidgetThermostat(desc.state, merge.gague, merge.deviation, cc, ct, cw, merge.ct, merge.tw);
-        out.setId("name", desc.name);
+        out.set_by_id("name", desc.name);
+        return out;
+    }
+
+    /**
+     * @param {DescMultiSelect} desc
+     * @returns {WidgetSelectButton}
+     */
+    static parse_multi_select(desc)
+    {
+        let merge = {...{max: 1, remove: true, labels: [], values: []}, ...desc.props};
+
+        let out = new WidgetSelectButton(merge.max, merge.remove);
+        
+        for(let i = 0; i < Math.min(merge.labels.length, merge.values.length); i++) {
+            out.add_option(merge.labels[i], merge.values[i]);
+        }
+
+        out.set_indices(desc.state);
+
         return out;
     }
 
@@ -239,7 +284,30 @@ class WidgetSet extends EventTarget{
         }, ...desc.props};
 
         let out = new WidgetScrubber(desc.state, merge.max, merge.min, merge.step, merge.zones, merge.speed, merge.spring);
-        out.setId("name", desc.name);
+        out.set_by_id("name", desc.name);
+        return out;
+    }
+
+    /**
+     * 
+     * @param {DescRadioSelect} desc
+     * @returns {WidgetRadio} 
+     */
+    static parse_radio(desc)
+    {
+        let merge = {...{
+            
+        }, ...desc.props};
+        let out = new WidgetRadioGroup();
+
+        for (let i = 0; i < Math.min(merge.labels.length, merge.values.length); i++) {
+            out.add_option(merge.labels[i], merge.values[i]);
+        }
+
+        if (desc.state !== null)
+            out.set_by_index(desc.state);
+
+        out.set_by_id("name", desc.name);
         return out;
     }
 
@@ -276,9 +344,14 @@ class WidgetSet extends EventTarget{
             case "thermostat":
                 out = WidgetSet.parse_thermostat(i);
                 break;
+            case "multi-select":
+                out = WidgetSet.parse_multi_select(i);
+                break;
             case "scrubber":
                 out = WidgetSet.parse_scrubber(i);
                 break;
+            case "radio":
+                out = WidgetSet.parse_radio(i);
             }
             this.widgets[i.name] = out;
         }
