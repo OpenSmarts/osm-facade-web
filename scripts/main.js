@@ -10,7 +10,7 @@ class Client {
             { type: "button", name: "bt", props: {}, },
             { type: "checkbox", name: "cb", props: {}, state: true },
             { type: "toggle", name: "tg", props: {}, state: false },
-            { type: "slider", name: "sli", props: {max: 10, min: 1}, state: 6 },
+            { type: "slider", name: "sli", props: {max: 10, min: 1, percent: true}, state: 6 },
             { type: "color-light", name: "cli", state: 0.7 },
             { type: "color-temp", name: "ctp", state: 3000 },
             { type: "color-wheel", name: "cwh", state: Color.from_rgb(255, 200, 200) },

@@ -210,7 +210,7 @@
     z-index: 2;
 
     font-weight: bold;
-    width: calc(1.2 * var(--base-unit));
+    min-width: var(--base-unit);
     height: var(--base-unit);
     pointer-events: none;
     user-select: none;
@@ -231,6 +231,11 @@
     background-color: rgba(0, 132, 255, 1);
     color: rgba(255, 255, 255, 1);
     transition-duration: 0s;
+}
+
+.color-light > .detail, .color-temp > .detail, .color-wheel > .detail {
+    min-width: 0;
+    width: var(--base-unit);
 }
 
 .color-light:active > .detail,
