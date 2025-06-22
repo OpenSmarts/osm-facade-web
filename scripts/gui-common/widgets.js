@@ -938,6 +938,7 @@ class WidgetThermostat extends Widget
         this.element.appendChild(this.#gague);
 
         this.#unit = new WidgetButton();
+        this.#unit.element.classList.add("unit");
         this.element.appendChild(this.#unit.element);
         this.#unit.addEventListener("change", this.#unit_handler.bind(this));
 
@@ -978,8 +979,8 @@ class WidgetThermostat extends Widget
         let unit = WidgetThermostat.#UNIT_MAP[this.get("unit")];
         let temp = this.get()[unit[1]]()
         let gague = this.get("gague")[unit[1]]();
-        this.#gague.innerText = `${Math.fround(gague)}`;
-        this.#temp.innerText = `${Math.fround(temp)}`;
+        this.#gague.innerText = `${Math.round(gague * 10)/10}`;
+        this.#temp.innerText = `${Math.round(temp * 10)/10}`;
         this.#unit.element.innerText = `${unit[0]}`;
 
         // Generate a percentage relative to the deviation
