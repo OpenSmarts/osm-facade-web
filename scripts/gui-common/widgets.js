@@ -85,7 +85,7 @@ class Widget extends EventTarget{
     /** @param {boolean} i */
     setInactive (i)
     {
-        this.element.classList.toggle("inactive", i);
+        this.element.setAttribute("aria-disabled", i ? "true" : "false");
         this.#inactive = i;
     }
 
@@ -647,6 +647,7 @@ class WidgetSlider extends WidgetDragable
         super(1);
         this.element.classList.add("slider");
         this.element.setAttribute("aria-orientation", "vertical");
+        this.element.setAttribute("aria-role", "slider")
         let fill = document.createElement("div");
         fill.classList.add("fill");
         this.element.appendChild(fill);
@@ -658,10 +659,13 @@ class WidgetSlider extends WidgetDragable
         this.#u_detail = this.#update_detail.bind(this);
 
         this.addEventListener("change", this.#change);
-        this.addEventListener("keydown", this.#keypress);
+        this.addEventListener("keydown", this.#keystart);
+        this.addEventListener("focusout", this.#focusend);
 
         super.set_by_id("max", max);
+        this.element.setAttribute("aria-max", max);
         super.set_by_id("min", min);
+        this.element.setAttribute("aria-min", min);
         super.set_by_id("step", step);
         super.set_by_id("prec", precision);
         super.set_by_id("perc", percent);
@@ -752,6 +756,9 @@ class WidgetSlider extends WidgetDragable
         let percent = (this.#tmpNum - min) / (max - min);
 
         this.#u_detail(this.#detail, this.#tmpNum, percent);
+        // Reason we set percent here even though we also set the aria-valuenow
+        // is that advanced attr support SUCKS MY ASS.  Seriously these people
+        // have had it in the standard for years and it just never gets implemented.
         this.element.style.setProperty("--percent", percent);
     }
 
@@ -761,7 +768,13 @@ class WidgetSlider extends WidgetDragable
         if (perc)
             el.innerText = `${Math.trunc(percent * 100)}%`;
         else
-            el.innerText = `${Math.trunc(Math.pow(10, prec) * val) / Math.pow(10, prec)}`
+            el.innerText = `${Math.trunc(Math.pow(10, prec) * val) / Math.pow(10, prec)}`;
+
+        this.element.setAttribute("aria-valuenow", `${Math.trunc(Math.pow(10, prec) * val) / Math.pow(10, prec)}`);
+        if (perc)
+            this.element.setAttribute("aria-valuetext", `${Math.trunc(percent * 100)}%`);
+        else
+            this.element.removeAttribute("aria-valuetext");
     }
 
     setDetailUpdater(updater)
@@ -770,7 +783,10 @@ class WidgetSlider extends WidgetDragable
     }
 
     /** @param {KeyboardEvent} event */
-    #keypress(event) {
+    #keystart(event) {
+        if (event.key != "Tab")
+            this.element.classList.add("touch");
+
         if (event.key == "Home") {
             this.set(this.get("min"));
             return;
@@ -803,6 +819,10 @@ class WidgetSlider extends WidgetDragable
         val += step * change;
         val = Math.min(Math.max(min, val), max);
         this.set(val);
+    }
+
+    #focusend() {
+        this.element.classList.remove("touch");
     }
 
     /**
@@ -856,6 +876,9 @@ class WidgetColorTemp extends WidgetSlider
         else
             out = WidgetColorTemp.WHITE.interpolate(WidgetColorTemp.BLUE, (percent - 0.85) / 0.15);
         this.element.style.setProperty("--detail", out.rgb());
+
+        this.element.setAttribute("aria-valuenow", `${Math.trunc(val)}`);
+        this.element.setAttribute("aria-valuetext", `${Math.trunc(val)} Kelvin`);
     }
 }
 
@@ -880,7 +903,7 @@ class WidgetColorLight extends WidgetSlider
     }
 
     /**
-     * Update the detail for the color temp slider
+     * Update the detail for the color light slider
      * @param {HTMLElement} el 
      * @param {number} val 
      * @param {number} percent 
@@ -889,6 +912,9 @@ class WidgetColorLight extends WidgetSlider
     {
         let out = WidgetColorLight.BLACK.interpolate(WidgetColorLight.WHITE, percent);
         this.element.style.setProperty("--detail", out.rgb());
+
+        this.element.setAttribute("aria-valuenow", `${val}`);
+        this.element.setAttribute("aria-valuetext", `${Math.trunc(percent * 100)}% luminosity`);
     }
 }
 
@@ -1770,7 +1796,7 @@ class WidgetRadioGroup extends Widget {
 
 	delete_option(index)
 	{
-		this.#radios[index].element.remove();
+		this.#radios[index].element.parentElement.remove();
 		this.#radios[index].removeEventListener("change", this.#binder);
 		this.#radios.splice(index, 1);
 		this.#vals.splice(index, 1);
