@@ -118,7 +118,7 @@
     font-weight: bold;
 }
 
-.toggle.active {
+.toggle[aria-checked="true"] {
     --w-bg: var(--w-tg-active-bg);
     --w-bg-hover: var(--w-tg-active-bg-hover);
     --w-bg-active: var(--w-tg-active-bg-active);
@@ -135,7 +135,7 @@
     overflow: unset;
 }
 
-.slider.h {
+.slider[aria-orientation="horizontal"] {
     --width: 3;
     --height: 1;
 }
@@ -162,7 +162,7 @@
     content: '';
 }
 
-.slider.h > .fill::before {
+.slider[aria-orientation="horizontal"] > .fill::before {
     width: calc(100% * var(--percent));
     height: 100%;
 }
@@ -188,7 +188,7 @@
     content: '';
 }
 
-.slider.h::after {
+.slider[aria-orientation="horizontal"]::after {
     top: calc(50% - var(--w-sl-dots-size) / 2);
     left: 6px;
     width: calc(100% - var(--w-sl-dots-size) * 2);
@@ -225,7 +225,7 @@
     transition-duration: 0.15s;
 }
 
-.slider.h > .detail, .color-light.h > .detail, .color-temp.h > .detail {
+.slider[aria-orientation="horizontal"] > .detail, .color-light[aria-orientation="horizontal"] > .detail, .color-temp[aria-orientation="horizontal"] > .detail {
     bottom: calc(100% + 20px);
     right: calc(-1.2 * var(--base-unit) / 2 + 100% * (1 - var(--percent)));
 }
@@ -329,7 +329,7 @@
     content: '';
 }
 
-.checkbox:checked, .checkbox.active {
+.checkbox[aria-checked="true"] {
     --w-bg: var(--w-cb-active-bg);
     --w-bg-hover: var(--w-cb-active-bg-hover);
     --w-bg-active: var(--w-cb-active-bg-active);
@@ -337,26 +337,24 @@
     box-shadow: 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
 }
 
-.checkbox:checked::after, .checkbox.active::after
+.checkbox[aria-checked="true"]::after
 {
     border-width: 0px 5px 5px 0px;
 }
 
-.checkbox.inactive:checked, .checkbox.active.inactive, .checkbox:disabled:checked {
+.checkbox.inactive[aria-checked="true"], .checkbox:disabled[aria-checked="true"] {
     box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive);
 }
 
-.checkbox.inactive:checked:active,
-.checkbox.active.inactive:active,
-.checkbox:disabled:checked:active,
-.checkbox.inactive.touch:checked,
-.checkbox.active.inactive.touch,
-.checkbox:disabled.touch:checked {
+.checkbox.inactive[aria-checked="true"]:active,
+.checkbox[aria-checked="true"]:disabled:active,
+.checkbox.inactive.touch[aria-checked="true"],
+.checkbox.touch[aria-checked="true"]:disabled {
     border: none;
     box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive) !important;
 }
 
-.checkbox.inactive:checked::before, .checkbox.active.inactive::before, .checkbox:disabled:checked::before {
+.checkbox.inactive[aria-checked="true"]::before, .checkbox[aria-checked="true"]:disabled::before {
     width: 100%;
     height: 100%;
     top: 0;
@@ -429,7 +427,7 @@
     overflow: unset;
 }
 
-.color-temp.h {
+.color-temp[aria-orientation="horizontal"] {
     --width: 3;
     --height: 1;
     background: linear-gradient(to left, rgb(190, 200, 255), white 15%, rgb(250, 160, 100));
@@ -443,7 +441,7 @@
     overflow: unset;
 }
 
-.color-light.h {
+.color-light[aria-orientation="horizontal"] {
     --width: 3;
     --height: 1;
     background: linear-gradient(to left, white, black);
@@ -469,7 +467,8 @@
     border-color: color-mix(in srgb, white calc(100% * (1 - var(--percent))), black calc(100% * var(--percent)));
 }
 
-.color-temp.h > .fill::after, .color-light.h > .fill::after {
+.color-temp[aria-orientation="horizontal"] > .fill::after,
+.color-light[aria-orientation="horizontal"] > .fill::after {
     left: calc(100% * var(--percent) - 7.5px);
     bottom: calc(50% - 7.5px);
 }
@@ -624,7 +623,7 @@
     overflow-x: auto;
 }
 
-.sel-button.h {
+.sel-button[aria-orientation="horizontal"] {
     flex-direction: column;
     height: 100%;
     overflow-y: auto;
@@ -673,7 +672,7 @@
     overflow: unset;
 }
 
-.scrubber.h {
+.scrubber[aria-orientation="horizontal"] {
     --width: 44;
     --height: 1;
 }
@@ -706,7 +705,7 @@
     transition-duration: 0.15s;
 }
 
-.scrubber.h > .fill::after {
+.scrubber[aria-orientation="horizontal"] > .fill::after {
     left: calc(50% - (var(--base-unit) - 10px) / 2 + (50% * var(--percent)));
     bottom: calc(50% - (var(--base-unit) - 10px) / 2);
 }
@@ -734,7 +733,7 @@
     transition-duration: 0.15s;
 }
 
-.scrubber.h > .fill > .zone
+.scrubber[aria-orientation="horizontal"] > .fill > .zone
 {
     height: 100%;
     width: calc(50% / var(--zones));
@@ -779,7 +778,7 @@
     transition-duration: 0.15s;
 }
 
-.scrubber.h > .detail {
+.scrubber[aria-orientation="horizontal"] > .detail {
     bottom: calc(100% + 20px);
     right: calc(50% - 1.2 * var(--base-unit) / 2);
 }
@@ -797,8 +796,8 @@
 .radio {
     min-width: 0;
     min-height: 0;
-    --width: 0.9;
-    --height: 0.9;
+    --width: 0.8;
+    --height: 0.8;
     
     --w-bg: rgba(0, 0, 0, 0);
     --w-bg-hover: rgba(0, 0, 0, 0);
@@ -842,8 +841,8 @@
 
 .radio::after
 {
-    height: calc(var(--base-unit) * 0.4);
-    width: calc(var(--base-unit) * 0.4);
+    height: calc(var(--base-unit) * 0.25);
+    width: calc(var(--base-unit) * 0.25);
 
     box-sizing: border-box;
 
@@ -856,64 +855,57 @@
     box-shadow: none;
     padding: 0;
 
-    top: calc(50% - var(--base-unit) * 0.4 / 2);
-    left: calc(50% - var(--base-unit) * 0.4 / 2);
+    top: calc(50% - var(--base-unit) * 0.25 / 2);
+    left: calc(50% - var(--base-unit) * 0.25 / 2);
 
     transition-duration: 0.35s;
 
     content: '';
 }
 
-.radio:checked, .radio.active {
+.radio[aria-checked="true"] {
     border-color: var(--w-radio-active);
 }
 
-.radio:checked:hover, .radio.active:hover,
-.radio:checked:focus-within, .radio.active:focus-within {
+.radio[aria-checked="true"]:hover,
+.radio[aria-checked="true"]:focus-within {
     border-color: var(--w-radio-active-hover);
 }
 
-.radio:checked:hover::after, .radio.active:hover::after,
-.radio:checked:focus-within::after, .radio.active:focus-within::after {
+.radio[aria-checked="true"]:hover::after,
+.radio[aria-checked="true"]:focus-within::after {
     background-color: var(--w-radio-active-hover);
 }
 
-.radio:checked::after, .radio.active::after
+.radio[aria-checked="true"]::after
 {
     background-color: var(--w-radio-active);
-    box-shadow: 1px 1px var(--w-shadow), 3px 3px var(--w-shadow), 5px 5px var(--w-shadow);
 }
 
-.radio:checked:active,
-.radio:checked.touch,
-.radio.active:active,
-.radio.active.touch {
+.radio[aria-checked="true"]:active,
+.radio[aria-checked="true"].touch {
     border-color: var(--w-radio-active-active);
 }
 
-.radio:checked:active::after,
-.radio:checked.touch::after,
-.radio.active:active::after,
-.radio.active.touch::after {
+.radio[aria-checked="true"]:active::after,
+.radio[aria-checked="true"].touch::after {
     background-color: var(--w-radio-active-active);
     box-shadow: none;
 }
 
 
-.radio.inactive:checked, .radio.active.inactive, .radio:disabled:checked {
+.radio.inactive[aria-checked="true"], .radio[aria-checked="true"]:disabled {
     box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive);
 }
 
-.radio.inactive:checked:active,
-.radio.active.inactive:active,
-.radio:disabled:checked:active,
-.radio.inactive.touch:checked,
-.radio.active.inactive.touch,
-.radio:disabled.touch:checked {
+.radio.inactive[aria-checked="true"]:active,
+.radio[aria-checked="true"]:disabled:active,
+.radio.inactive.touch[aria-checked="true"],
+.radio.touch[aria-checked="true"]:disabled {
     box-shadow: 1px 1px var(--w-shadow-inactive), 3px 3px var(--w-shadow-inactive), 5px 5px var(--w-shadow-inactive) !important;
 }
 
-.radio.inactive:checked::before, .radio.active.inactive::before, .radio:disabled:checked::before {
+.radio.inactive[aria-checked="true"]::before, .radio[aria-checked="true"]:disabled::before {
     width: 100%;
     height: 100%;
     top: 0;
@@ -933,6 +925,7 @@
     --width: 3;
     --height: 2;
     justify-content: space-around;
+    overflow-y: auto;
 }
 
 .radio-group.h {

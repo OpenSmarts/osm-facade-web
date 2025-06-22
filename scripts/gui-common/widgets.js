@@ -14,7 +14,10 @@ class Widget extends EventTarget{
 
     /** @type {boolean} */
     #inactive = false;
-    
+
+    /** @type {Array<string>} */
+    prevent_keys = [];
+
     /**
      * Construct a new widget
      */
@@ -137,9 +140,11 @@ class Widget extends EventTarget{
                 this.element.classList.add("touch");
             else if (event.type == "keyup")
                 this.element.classList.remove("touch");
-
             event.preventDefault();
         }
+
+        if (this.prevent_keys.indexOf(event.key) != -1)
+            event.preventDefault();
     }
 
     /** @param {FocusEvent} event */
@@ -355,6 +360,8 @@ class WidgetToggle extends Widget
         super();
         this.element.classList.add("button");
         this.element.classList.add("toggle");
+        this.element.setAttribute("aria-role", "switch");
+        this.element.setAttribute("aria-checked", value === tv ? "true" : "false");
         this.addEventListener("mousedown", this.#prime);
         this.addEventListener("mouseup", this.#toggle);
         this.addEventListener("mouseleave", this.#leave);
@@ -396,7 +403,7 @@ class WidgetToggle extends Widget
 
 	update()
 	{
-        this.element.classList.toggle("active", this.get() === this.get("true"));
+        this.element.setAttribute("aria-checked", this.get() === this.get("true") ? "true" : "false");
 	}
 
     /** @param {MouseEvent} event */
@@ -467,6 +474,7 @@ class WidgetCheckbox extends WidgetToggle {
     constructor(value = false, tv = true, fv = false)
     {
         super(value, tv, fv);
+        this.element.setAttribute("aria-role", "checkbox");
         this.element.classList.remove("toggle");
         this.element.classList.add("checkbox");
     }
@@ -638,6 +646,7 @@ class WidgetSlider extends WidgetDragable
     {
         super(1);
         this.element.classList.add("slider");
+        this.element.setAttribute("aria-orientation", "vertical");
         let fill = document.createElement("div");
         fill.classList.add("fill");
         this.element.appendChild(fill);
@@ -649,6 +658,7 @@ class WidgetSlider extends WidgetDragable
         this.#u_detail = this.#update_detail.bind(this);
 
         this.addEventListener("change", this.#change);
+        this.addEventListener("keydown", this.#keypress);
 
         super.set_by_id("max", max);
         super.set_by_id("min", min);
@@ -656,13 +666,15 @@ class WidgetSlider extends WidgetDragable
         super.set_by_id("prec", precision);
         super.set_by_id("perc", percent);
         this.set(value);
+
+        this.prevent_keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "End", "Home"];
     }
 
     #common_move(x, y)
     {
         let rect = this.element.getBoundingClientRect();
         let top = 0, bot = 0, point = 0;
-        if (this.element.classList.contains("h"))
+        if (this.element.getAttribute("aria-orientation") == "horizontal")
         {
             top = rect.right;
             bot = rect.left;
@@ -755,6 +767,42 @@ class WidgetSlider extends WidgetDragable
     setDetailUpdater(updater)
     {
         this.#u_detail = updater;
+    }
+
+    /** @param {KeyboardEvent} event */
+    #keypress(event) {
+        if (event.key == "Home") {
+            this.set(this.get("min"));
+            return;
+        } else if (event.key == "End") {
+            this.set(this.get("max"));
+            return;
+        }
+
+        let change = 0;
+        if (event.key == "PageUp")
+                change = 5;
+        else if (event.key == "PageDown")
+            change = -5;
+        else if (this.element.getAttribute("aria-orientation") == "horizontal") {
+            if (event.key == "ArrowRight")
+                change = 1;
+            else if (event.key == "ArrowLeft")
+                change = -1;
+        } else {
+            if (event.key == "ArrowUp")
+                change = 1;
+            else if (event.key == "ArrowDown")
+                change = -1;
+        }
+
+        let val = this.get();
+        let min = this.get("min")
+        let max = this.get("max")
+        let step = this.get("step");
+        val += step * change;
+        val = Math.min(Math.max(min, val), max);
+        this.set(val);
     }
 
     /**
@@ -1349,6 +1397,7 @@ class WidgetScrubber extends WidgetDragable
         super(1);
         
         this.element.classList.add("scrubber");
+        this.element.setAttribute("aria-orientation", "vertical");
 
         this.#fill = document.createElement("div");
         this.#fill.classList.add("fill");
@@ -1386,7 +1435,7 @@ class WidgetScrubber extends WidgetDragable
     {
         let rect = this.element.getBoundingClientRect();
         let point = 0, dist = 0;
-        if (this.element.classList.contains("h"))
+        if (this.element.getAttribute("aria-orientation") == "horizontal")
         {
             dist = rect.width / 2;
             point = x - (rect.left + dist);
@@ -1554,6 +1603,7 @@ class WidgetRadio extends Widget {
         super();
         this.element.classList.add("button");
         this.element.classList.add("radio");
+        this.element.setAttribute("aria-checked", value === tv ? "true" : false);
         this.addEventListener("mousedown", this.#prime);
         this.addEventListener("mouseup", this.#toggle);
         this.addEventListener("mouseleave", this.#leave);
@@ -1592,7 +1642,7 @@ class WidgetRadio extends Widget {
 
 	update()
 	{
-        this.element.classList.toggle("active", this.get() === this.get("true"));
+        this.element.setAttribute("aria-checked", this.get() === this.get("true") ? "true" : false);
 	}
 
     /** @param {MouseEvent} event */
