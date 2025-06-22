@@ -35,7 +35,8 @@
 
 /**
  * @typedef OSmThermostatProps
- * @property {number} gague
+ * @property {Temperature} gague
+ * @property {number} [unit]
  * @property {number} [deviation]
  * @property {Color} [color_cold]
  * @property {Color} [color_temperate]
@@ -103,7 +104,7 @@
  */
 
 /**
- * @typedef {DescBase & {type: "thermostat", props: OSmThermostatProps, state: number}} DescThermostat
+ * @typedef {DescBase & {type: "thermostat", props: OSmThermostatProps, state: Temperature}} DescThermostat
  */
 
 /**
@@ -235,6 +236,7 @@ class WidgetSet extends EventTarget{
     static parse_thermostat(desc)
     {
         let merge = {...{
+            unit: 0,
             deviation: 7,
             color_cold: Color.from_rgb(0, 133, 255),
             color_temperate: Color.from_rgb(18, 229, 82),
@@ -243,11 +245,16 @@ class WidgetSet extends EventTarget{
             tw: 2,
         }, ...desc.props};
 
-        let cc = new Color(...merge.color_cold.channels);
-        let ct = new Color(...merge.color_temperate.channels);
-        let cw = new Color(...merge.color_warm.channels);
-
-        let out = new WidgetThermostat(desc.state, merge.gague, merge.deviation, cc, ct, cw, merge.ct, merge.tw);
+        let out = new WidgetThermostat(
+            desc.state,
+            merge.gague,
+            merge.unit,
+            merge.deviation,
+            merge.color_cold,
+            merge.color_temperate,
+            merge.color_warm,
+            merge.ct,
+            merge.tw);
         out.set_by_id("name", desc.name);
         return out;
     }

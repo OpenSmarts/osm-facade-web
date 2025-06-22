@@ -14,9 +14,9 @@ class Client {
             { type: "color-light", name: "cli", state: 0.7 },
             { type: "color-temp", name: "ctp", state: 3000 },
             { type: "color-wheel", name: "cwh", state: Color.from_rgb(255, 200, 200) },
-            { type: "thermostat", name: "thm", props: {gague: 69}, state: 72 },
+            { type: "thermostat", name: "thm", props: {gague: Temperature.from_celcius(21)}, state: Temperature.from_celcius(23) },
             { type: "multi-select", name: "msl", props: {max: 2, values: ["aeiou", "sometimes y"], labels: ["vowels", "extra vowels"]}, state: []},
-            { type: "scrubber", name: "scb", props: {min: 60, max: 80, step: 1}, state: 72 },
+            { type: "scrubber", name: "scb", props: {min: 18, max: 26, step: 0.5}, state: 23 },
             { type: "radio", name: "rad", props: {values: ["a", "b"], labels: ["a", "b"]}, state: null}
         ];
 
@@ -31,7 +31,7 @@ class Client {
     changeSet(e)
     {
         if (e.detail.name == "scb" && e.detail.changed == "value")
-            this.set.widgets["thm"].set(e.detail.value);
+            this.set.widgets["thm"].set(Temperature.from_celcius(e.detail.value));
     }
 }
 

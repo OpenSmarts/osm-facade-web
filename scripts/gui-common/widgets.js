@@ -878,8 +878,8 @@ class WidgetColorWheel extends WidgetDragable
 
 /**
  * @typedef {object} ThermSpec
- * @property {number} temp
- * @property {number} gague
+ * @property {Temperature} temp
+ * @property {Temperature} gague
  */
 
 /**
@@ -893,10 +893,21 @@ class WidgetThermostat extends Widget
     /** @type {HTMLElement} */
     #temp = null;
 
+    /** @type {WidgetButton} */
+    #unit = null;
+
+    static #UNIT_MAP = [
+        ["°C", "to_celcius"],
+        ["°F", "to_fahrenheit"],
+        ["K", "to_kelvin"],
+        ["°H", "to_halc"],
+    ];
+
     /**
      * Constructor
-     * @param {number} value Current set point
-     * @param {number} gague Current temperature being read from sensor(s)
+     * @param {Temperature} value Current set point
+     * @param {Temperature} gague Current temperature being read from sensor(s)
+     * @param {number} [unit] The current display unit (0: Celcius, 1: Fahrenheit, 2: Kelvin, 3: Halc)
      * @param {number} [dev] The deviation of the arch (how far in degrees (temperature) from the middle to each end of the arc)
      * @param {Color} [cold_col] The color the arch will display when in "cold" temperatures
      * @param {Color} [temp_col] The color the arch will display when in "temperate" temperatures
@@ -907,6 +918,7 @@ class WidgetThermostat extends Widget
     constructor(
         value,
         gague,
+        unit = 0,
         dev = 7,
         cold_col = Color.from_rgb(0, 133, 255),
         temp_col = Color.from_rgb(18, 229, 82),
@@ -925,6 +937,10 @@ class WidgetThermostat extends Widget
         this.#gague = document.createElement("gague");
         this.element.appendChild(this.#gague);
 
+        this.#unit = new WidgetButton();
+        this.element.appendChild(this.#unit.element);
+        this.#unit.addEventListener("change", this.#unit_handler.bind(this));
+
         this.addEventListener("change", this.update);
 
         super.set_by_id("deviation", dev);
@@ -933,16 +949,38 @@ class WidgetThermostat extends Widget
         super.set_by_id("warm", warm_col);
         super.set_by_id("ct", ct);
         super.set_by_id("tw", tw);
+        super.set_by_id("unit", unit);
         super.set_by_id("gague", gague);
         this.set(value);
     }
 
+    /**
+     * 
+     * @param {CustomEvent} event 
+     */
+    #unit_handler(event)
+    {
+        if (event.detail)
+            console.log(event);
+
+        if (!this.#unit.get())
+            return;
+
+        let unit = this.get("unit");
+        if (unit >= 0 && unit + 1 < WidgetThermostat.#UNIT_MAP.length)
+            this.set_by_id("unit", this.get("unit") + 1);
+        else
+            this.set_by_id("unit", 0);
+    }
+
     update()
     {
-        /** @type {ThermSpec} */
-        let temp = this.get(), gague = this.get("gague");
+        let unit = WidgetThermostat.#UNIT_MAP[this.get("unit")];
+        let temp = this.get()[unit[1]]()
+        let gague = this.get("gague")[unit[1]]();
         this.#gague.innerText = `${Math.fround(gague)}`;
-        this.#temp.innerText = `${Math.fround(temp)}°`;
+        this.#temp.innerText = `${Math.fround(temp)}`;
+        this.#unit.element.innerText = `${unit[0]}`;
 
         // Generate a percentage relative to the deviation
         let div = (gague - temp) / this.get("deviation");
@@ -972,7 +1010,7 @@ class WidgetThermostat extends Widget
     set_by_id(id, v, emit = false)
     {
         super.set_by_id(id, v, emit);
-        if (id == "deviation" || id == "cold" || id == "temp" || id == "warm" || id == "ct" || id == "tw" || id == "gague")
+        if (id == "deviation" || id == "cold" || id == "temp" || id == "warm" || id == "ct" || id == "tw" || id == "gague" || id == "unit")
         {
             this.update();
         }
@@ -1043,17 +1081,13 @@ class WidgetSelectButton extends Widget
 			{
                 /** @type {number} */
 				let swap = this.#selected.shift();
-                this.#swgs[swap].removeEventListener("change", this.#binder);
 			    this.#swgs[swap].set_by_id("value", -swap - 1, false);
-                this.#swgs[swap].addEventListener("change", this.#binder);
 			}
 			this.#selected.push(idx);
 		}
 		else
 		{
-            this.#swgs[idx].removeEventListener("change", this.#binder);
             this.#swgs[idx].set_by_id("value", -swap - 1, false);
-            this.#swgs[idx].addEventListener("change", this.#binder);
 		}
 		
 		if (!this.#removeLastOver && this.#selected.length >= this.#maxSelections)
