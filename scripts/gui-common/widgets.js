@@ -24,6 +24,7 @@ class Widget extends EventTarget{
         this.element = document.createElement("div");
         this.element.classList.add("widget");
         this.element.classList.add("gridlock");
+        this.element.setAttribute("tabindex", 0);
 
         this.element.addEventListener("mousedown", this.#emitMouseEvent.bind(this));
         this.element.addEventListener("mouseup", this.#emitMouseEvent.bind(this));
@@ -37,6 +38,12 @@ class Widget extends EventTarget{
         this.element.addEventListener("touchend", this.#emitTouchEvent.bind(this));
         this.element.addEventListener("touchmove", this.#emitTouchEvent.bind(this));
         this.element.addEventListener("touchcancel", this.#emitTouchEvent.bind(this));
+
+        this.element.addEventListener("focusin", this.#emitFocusEvent.bind(this));
+        this.element.addEventListener("focusout", this.#emitFocusEvent.bind(this));
+
+        this.element.addEventListener("keydown", this.#emitKeyboardEvent.bind(this));
+        this.element.addEventListener("keyup", this.#emitKeyboardEvent.bind(this));
 
         this.element.addEventListener("contextmenu", this.#emitContextEvent.bind(this));
     }
@@ -118,6 +125,34 @@ class Widget extends EventTarget{
         event.preventDefault();
     }
 
+    /** @param {KeyboardEvent} event */
+    #emitKeyboardEvent(event) {
+        if (this.#inactive)
+            this.dispatchEvent(new CustomEvent("inactive", {detail: {widget: this, event: new KeyboardEvent(event.type, event)}}));
+        else
+            this.dispatchEvent(new KeyboardEvent(event.type, event));
+
+        if (event.key == " " || event.key == "Enter") {
+            if (event.type == "keydown")
+                this.element.classList.add("touch");
+            else if (event.type == "keyup")
+                this.element.classList.remove("touch");
+
+            event.preventDefault();
+        }
+    }
+
+    /** @param {FocusEvent} event */
+    #emitFocusEvent(event) {
+        if (this.#inactive)
+            this.dispatchEvent(new CustomEvent("inactive", {detail: {widget: this, event: new FocusEvent(event.type, event)}}));
+        else
+            this.dispatchEvent(new FocusEvent(event.type, event));
+
+        if(event.type == "focusout")
+            this.element.classList.remove("touch");
+    }
+
     /** @param {Event} event */
     #emitContextEvent(event)
     {
@@ -156,6 +191,9 @@ class WidgetButton extends Widget
         this.addEventListener("mouseenter", this.#enter);
         this.addEventListener("touchstart", this.#touchstart);
         this.addEventListener("touchend", this.#touchend);
+        this.addEventListener("keydown", this.#keystart);
+        this.addEventListener("keyup", this.#keyend);
+        this.addEventListener("focusout", this.#focusend);
         this.#bound = this.#unpress.bind(this);
         this.set_by_id("true", tv);
         this.set_by_id("false", fv);
@@ -165,7 +203,8 @@ class WidgetButton extends Widget
     /** @param {MouseEvent} event */
     #press(event)
     {
-        this.#pressing |= (1 << event.button);
+        if (event.button == 0)
+            this.#pressing |= 1;
         this.set(this.get("true"));
     }
 
@@ -198,8 +237,6 @@ class WidgetButton extends Widget
     /** @param {MouseEvent} event */
     #enter(event)
     {
-        if (this.primed == 0)
-            return;
         this.#gone = 0;
         window.removeEventListener("mouseup", this.#bound);
     }
@@ -237,6 +274,56 @@ class WidgetButton extends Widget
         }
     }
 
+    /** @param {KeyboardEvent} event */
+    #keystart(event)
+    {
+        let button = 0;
+        if (event.key == " ")
+            button = 2;
+        else if (event.key == "Enter")
+            button = 4;
+        
+        if (button != 0 && (this.#pressing & button) == 0) {
+            if (this.#pressing == 0)
+                this.set(this.get("true"));
+            this.#pressing |= button;
+        }
+    }
+
+    /** @param {KeyboardEvent} event */
+    #keyend(event)
+    {
+        let button = 0;
+        if (event.key == " ")
+            button = 2;
+        else if (event.key == "Enter")
+            button = 4;
+
+        if ((button & this.#pressing) !== 0) {
+            this.#pressing -= button;
+            if (this.#pressing == 0)
+                this.set(this.get("false"));
+        }
+    }
+
+    /** @param {FocusEvent} event */
+    #focusend(event)
+    {
+        let button = 6;
+
+        if ((button & this.#pressing) !== 0) {
+            this.#pressing -= (button & this.#pressing);
+            if (this.#pressing == 0)
+                this.set(this.get("false"));
+        }
+    }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {any} v 
+     * @param {boolean} [emit] 
+     */
     set_by_id(id, v, emit = false)
     {
         if (id == "false" || id == "true")
@@ -704,6 +791,7 @@ class WidgetColorTemp extends WidgetSlider
         this.element.classList.replace("slider", "color-temp");
 
         this.setDetailUpdater(this.#update_detail.bind(this));
+        this.#update_detail(null, null, (value - 2700) / (6000 - 2700));
     }
 
     /**
@@ -740,6 +828,7 @@ class WidgetColorLight extends WidgetSlider
         this.element.classList.replace("slider", "color-light");
 
         this.setDetailUpdater(this.#update_detail.bind(this));
+        this.#update_detail(null, null, value);
     }
 
     /**

@@ -51,9 +51,9 @@
     --w-scr-back-active: rgba(62, 162, 255, 0.5);
 
     /* Radio */
-    --w-radio-inactive: #ccc;
-    --w-radio-inactive-hover: #eee;
-    --w-radio-inactive-active: #eee;
+    --w-radio-inactive: #eee;
+    --w-radio-inactive-hover: #def;
+    --w-radio-inactive-active: #def;
     --w-radio-active: #0084ff;
     --w-radio-active-hover: #2696ff;
     --w-radio-active-active: #3ea2ff;
