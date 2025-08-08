@@ -15,8 +15,11 @@ class Widget extends EventTarget{
     /** @type {boolean} */
     #inactive = false;
 
-    /** @type {Array<string>} */
-    prevent_keys = [];
+    /** @type {Object} */
+    prevent_keys = {
+        "Enter": 1,
+        " ": 1
+    };
 
     /**
      * Construct a new widget
@@ -112,9 +115,6 @@ class Widget extends EventTarget{
     /** @param {TouchEvent} event */
     #emitTouchEvent(event)
     {
-        //if (window.SCROLLING)
-        //    return;
-
         if (event.type == "touchstart")
             this.element.classList.add("touch");
         else if (event.type == "touchend" || event.type == "touchcancel")
@@ -135,15 +135,7 @@ class Widget extends EventTarget{
         else
             this.dispatchEvent(new KeyboardEvent(event.type, event));
 
-        if (event.key == " " || event.key == "Enter") {
-            if (event.type == "keydown")
-                this.element.classList.add("touch");
-            else if (event.type == "keyup")
-                this.element.classList.remove("touch");
-            event.preventDefault();
-        }
-
-        if (this.prevent_keys.indexOf(event.key) != -1)
+        if (this.prevent_keys[event.key] == 1)
             event.preventDefault();
     }
 
@@ -292,6 +284,8 @@ class WidgetButton extends Widget
             if (this.#pressing == 0)
                 this.set(this.get("true"));
             this.#pressing |= button;
+
+            this.element.classList.add("touch");
         }
     }
 
@@ -307,7 +301,10 @@ class WidgetButton extends Widget
         if ((button & this.#pressing) !== 0) {
             this.#pressing -= button;
             if (this.#pressing == 0)
+            {
                 this.set(this.get("false"));
+                this.element.classList.remove("touch");
+            }
         }
     }
 
@@ -319,7 +316,10 @@ class WidgetButton extends Widget
         if ((button & this.#pressing) !== 0) {
             this.#pressing -= (button & this.#pressing);
             if (this.#pressing == 0)
+            {
                 this.set(this.get("false"));
+                this.element.classList.remove("touch");
+            }
         }
     }
 
@@ -360,45 +360,58 @@ class WidgetToggle extends Widget
         super();
         this.element.classList.add("button");
         this.element.classList.add("toggle");
-        this.element.setAttribute("aria-role", "switch");
+        this.element.setAttribute("role", "switch");
         this.element.setAttribute("aria-checked", value === tv ? "true" : "false");
         this.addEventListener("mousedown", this.#prime);
-        this.addEventListener("mouseup", this.#toggle);
         this.addEventListener("mouseleave", this.#leave);
         this.addEventListener("mouseenter", this.#enter);
         this.addEventListener("change", this.update);
         this.addEventListener("touchend", this.#touchend);
+        this.addEventListener("keydown", this.#keystart);
+        this.addEventListener("keyup", this.#keyend);
+        this.addEventListener("focusout", this.#focusend);
         this.#bound = this.#toggle.bind(this);
         super.set_by_id("false", fv);
         super.set_by_id("true", tv);
         this.set(value);
     }
 
+    do_toggle() {
+        if (this.get() === this.get("true"))
+        	this.set(this.get("false"));
+		else
+			this.set(this.get("true"));
+    }
+
     /** @param {MouseEvent} event */
     #prime(event)
     {
-        this.#primed |= (1 << event.button);
+        if (event.button != 0)
+            return;
+        this.#primed |= 1;
+        window.addEventListener("mouseup", this.#bound);
     }
 
     /** @param {MouseEvent} event */
     #toggle(event)
     {
-        if (this.#gone)
+        if (event.button != 0)
+            return;
+
+        if ((this.#primed & 1) != 0) {
+            window.removeEventListener("mouseup", this.#bound);
+        }
+
+        if (this.#gone != 0)
         {
             this.#primed = 0;
             this.#gone = 0;
-            window.removeEventListener("mouseup", this.#bound);
-        }
-        if (((1 << event.button) & this.#primed) == 0)
             return;
+        }
 
-		if (this.get() === this.get("true"))
-        	this.set(this.get("false"));
-		else
-			this.set(this.get("true"));
-		
+		this.do_toggle();
 		this.update();
-        this.#primed -= (1 << event.button);
+        this.#primed -= 1;
     }
 
 	update()
@@ -412,7 +425,6 @@ class WidgetToggle extends Widget
         if (this.#primed == 0)
             return;
         this.#gone = 1;
-        window.addEventListener("mouseup", this.#bound);
     }
 
     /** @param {MouseEvent} event */
@@ -421,7 +433,6 @@ class WidgetToggle extends Widget
         if (this.#primed == 0)
             return;
         this.#gone = 0;
-        window.removeEventListener("mouseup", this.#bound);
     }
 
     /** @param {TouchEvent} event */
@@ -439,12 +450,51 @@ class WidgetToggle extends Widget
                 i.clientY > rect.top &&
                 i.clientY < rect.bottom
             ) {
-                if (this.get() === this.get("true"))
-                    this.set(this.get("false"));
-                else
-                    this.set(this.get("true"));
+                this.do_toggle();
                 return;
             }
+        }
+    }
+
+    #keystart (event)
+    {
+        let btn = 0;
+        if (event.key == " ")
+            btn = 2;
+        else if (event.key == "Enter")
+            btn = 4;
+        
+        this.#primed |= btn;
+
+        if (this.#primed && btn)
+            this.element.classList.add("touch");
+    }
+
+    #keyend (event)
+    {
+        let btn = 0;
+        if (event.key == " ")
+            btn = 2;
+        else if (event.key == "Enter")
+            btn = 4;
+        
+        if (this.#primed & btn) {
+            this.#primed -= btn;
+
+            this.do_toggle()
+
+            if (this.#primed == 0)
+                this.element.classList.remove("touch");
+        }
+    }
+
+    #focusend(event)
+    {
+        let btn = 6;
+        if ((this.#primed & btn) != 0) {
+            this.#primed -= (this.#primed & btn);
+            if (this.#primed == 0)
+                this.element.classList.remove("touch");
         }
     }
 
@@ -474,7 +524,7 @@ class WidgetCheckbox extends WidgetToggle {
     constructor(value = false, tv = true, fv = false)
     {
         super(value, tv, fv);
-        this.element.setAttribute("aria-role", "checkbox");
+        this.element.setAttribute("role", "checkbox");
         this.element.classList.remove("toggle");
         this.element.classList.add("checkbox");
     }
@@ -646,8 +696,12 @@ class WidgetSlider extends WidgetDragable
     {
         super(1);
         this.element.classList.add("slider");
+        this.element.setAttribute("role", "slider");
         this.element.setAttribute("aria-orientation", "vertical");
-        this.element.setAttribute("aria-role", "slider")
+        this.element.setAttribute("aria-valuenow", value);
+        if (percent)
+            this.element.setAttribute("aria-valuetext", `${Math.trunc((value - min) / (max - min) * 100)}%`);
+
         let fill = document.createElement("div");
         fill.classList.add("fill");
         this.element.appendChild(fill);
@@ -663,15 +717,26 @@ class WidgetSlider extends WidgetDragable
         this.addEventListener("focusout", this.#focusend);
 
         super.set_by_id("max", max);
-        this.element.setAttribute("aria-max", max);
+        this.element.setAttribute("aria-valuemax", max);
         super.set_by_id("min", min);
-        this.element.setAttribute("aria-min", min);
+        this.element.setAttribute("aria-valuemin", min);
         super.set_by_id("step", step);
         super.set_by_id("prec", precision);
         super.set_by_id("perc", percent);
         this.set(value);
 
-        this.prevent_keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "End", "Home"];
+        this.prevent_keys = {
+            "ArrowUp": 1,
+            "ArrowDown": 1,
+            "ArrowLeft": 1,
+            "ArrowRight": 1,
+            "PageUp": 1,
+            "PageDown": 1,
+            "End": 1,
+            "Home": 1,
+            "Enter": 1,
+            " ": 1
+        };
     }
 
     #common_move(x, y)
@@ -784,7 +849,7 @@ class WidgetSlider extends WidgetDragable
 
     /** @param {KeyboardEvent} event */
     #keystart(event) {
-        if (event.key != "Tab")
+        if (event.key != "Tab" && event.key != "Shift")
             this.element.classList.add("touch");
 
         if (event.key == "Home") {
@@ -1423,6 +1488,7 @@ class WidgetScrubber extends WidgetDragable
         super(1);
         
         this.element.classList.add("scrubber");
+        this.element.setAttribute("role", "slider")
         this.element.setAttribute("aria-orientation", "vertical");
 
         this.#fill = document.createElement("div");
@@ -1435,8 +1501,12 @@ class WidgetScrubber extends WidgetDragable
 
         this.element.style.setProperty("--percent", 0);
 
+        this.element.setAttribute("aria-valuenow", value);
+
         super.set_by_id("max", max);
+        this.element.setAttribute("aria-valuemax", max);
         super.set_by_id("min", min);
+        this.element.setAttribute("aria-valuemin", min);
         super.set_by_id("step", step);
         super.set_by_id("zones", zones);
         super.set_by_id("speed", speed);
@@ -1589,6 +1659,11 @@ class WidgetScrubber extends WidgetDragable
         this.#detail.innerText = this.#tmpNum;
     }
 
+    #keypress(event)
+    {
+
+    }
+
     /**
      * @param {string} id
      * @param {*} v
@@ -1611,118 +1686,22 @@ class WidgetScrubber extends WidgetDragable
 }
 
 /**
- * A toggle widget, similar to a WidgetCheckbox, but meant
- * to be used for on/off power states.
- * @extends Widget<*>
+ * A radio widget, similar to a WidgetToggle, but meant
+ * to be used for single selection states.
+ * @extends WidgetToggle
  */
-class WidgetRadio extends Widget {
-    /** @type {number} */
-    #primed = 0;
+class WidgetRadio extends WidgetToggle {
 
-    /** @type {number} */
-    #gone = 0;
-
-    #bound = null;
-
-    constructor (value = false, tv = true, fv = false)
+    constructor(value = false, tv = true, fv = false)
     {
-        super();
-        this.element.classList.add("button");
+        super(value, tv, fv);
+        this.element.setAttribute("role", "radio");
+        this.element.classList.remove("toggle");
         this.element.classList.add("radio");
-        this.element.setAttribute("aria-checked", value === tv ? "true" : false);
-        this.addEventListener("mousedown", this.#prime);
-        this.addEventListener("mouseup", this.#toggle);
-        this.addEventListener("mouseleave", this.#leave);
-        this.addEventListener("mouseenter", this.#enter);
-        this.addEventListener("change", this.update);
-        this.addEventListener("touchend", this.#touchend);
-        this.#bound = this.#toggle.bind(this);
-        super.set_by_id("false", fv);
-        super.set_by_id("true", tv);
-        this.set(value);
     }
 
-    /** @param {MouseEvent} event */
-    #prime(event)
-    {
-        this.#primed |= (1 << event.button);
-    }
-
-    /** @param {MouseEvent} event */
-    #toggle(event)
-    {
-        if (this.#gone)
-        {
-            this.#primed = 0;
-            this.#gone = 0;
-            window.removeEventListener("mouseup", this.#bound);
-        }
-        if (((1 << event.button) & this.#primed) == 0)
-            return;
-
-		this.set(this.get("true"));
-		
-		this.update();
-        this.#primed -= (1 << event.button);
-    }
-
-	update()
-	{
-        this.element.setAttribute("aria-checked", this.get() === this.get("true") ? "true" : false);
-	}
-
-    /** @param {MouseEvent} event */
-    #leave(event)
-    {
-        if (this.#primed == 0)
-            return;
-        this.#gone = 1;
-        window.addEventListener("mouseup", this.#bound);
-    }
-
-    /** @param {MouseEvent} event */
-    #enter(event)
-    {
-        if (this.#primed == 0)
-            return;
-        this.#gone = 0;
-        window.removeEventListener("mouseup", this.#bound);
-    }
-
-    /** @param {TouchEvent} event */
-    #touchend(event)
-    {
-        if (event.changedTouches.length < 1)
-            return;
-
-        let rect = this.element.getBoundingClientRect();
-
-        for (let i of event.changedTouches)
-        {
-            if (i.clientX < rect.right &&
-                i.clientX > rect.left &&
-                i.clientY > rect.top &&
-                i.clientY < rect.bottom
-            ) {
-                this.set(this.get("true"));
-                return;
-            }
-        }
-    }
-
-    /**
-     * @param {string} id
-     * @param {*} v
-     * @param {boolean} [emit]
-     */
-    set_by_id(id, v, emit = false)
-    {
-        if (id == "false" || id == "true")
-        {
-            if (this.get() === this.get(id))
-                super.set_by_id("value", v);
-        }
-        super.set_by_id(id, v, emit);
+    do_toggle() {
+        this.set(this.get("true"))
     }
 }
 
